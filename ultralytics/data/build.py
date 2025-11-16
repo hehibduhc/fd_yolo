@@ -232,6 +232,13 @@ def build_yolo_dataset(
 ) -> Dataset:
     """Build and return a YOLO dataset based on configuration parameters."""
     dataset = YOLOMultiModalDataset if multi_modal else YOLODataset
+    prior_fd_dir = getattr(cfg, "prior_fd_dir", None)
+    if prior_fd_dir is None and data is not None:
+        cfg_prior = data.get("prior_fd_dir")
+        if isinstance(cfg_prior, dict):
+            prior_fd_dir = cfg_prior.get(mode) or cfg_prior.get("default") or next(iter(cfg_prior.values()), None)
+        else:
+            prior_fd_dir = cfg_prior
     return dataset(
         img_path=img_path,
         imgsz=cfg.imgsz,
@@ -248,6 +255,8 @@ def build_yolo_dataset(
         classes=cfg.classes,
         data=data,
         fraction=cfg.fraction if mode == "train" else 1.0,
+        split=mode,
+        prior_fd_dir=prior_fd_dir,
     )
 
 
