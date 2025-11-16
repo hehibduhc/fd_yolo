@@ -1,0 +1,7 @@
+path: lxdata/split # dataset root dir
+train: images/train # train images (relative to 'path') 4 images
+val: images/val # val images (relative to 'path') 4 images
+
+# Classes for crack
+names:
+  0: crack

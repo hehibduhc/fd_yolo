@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w82p25</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w82p25.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>633</width>
+    <height>475</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>20.848000000000013</cx>
+      <cy>136.5625</cy>
+      <w>24.7845</w>
+      <h>86.2403</h>
+      <angle>0.1</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>276.555</cx>
+      <cy>165.046</cy>
+      <w>20.3801</w>
+      <h>79.9445</h>
+      <angle>0.2</angle>
+    </robndbox>
+  </object>
+</annotation>

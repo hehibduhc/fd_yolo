@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w73p19</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w73p19.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>633</width>
+    <height>475</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.39960000000002</cx>
+      <cy>128.8114</cy>
+      <w>56.565</w>
+      <h>132.2309</h>
+      <angle>2.941593</angle>
+    </robndbox>
+  </object>
+</annotation>

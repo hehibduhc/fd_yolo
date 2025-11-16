@@ -1,0 +1,56 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w14p10</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w14p10.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>556</width>
+    <height>417</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>97.76830000000001</cx>
+      <cy>133.91469999999998</cy>
+      <w>18.4823</w>
+      <h>38.0319</h>
+      <angle>2.441593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>217.5082</cx>
+      <cy>108.16990000000001</cy>
+      <w>15.7803</w>
+      <h>28.5721</h>
+      <angle>2.541593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>44.399699999999996</cx>
+      <cy>143.6443</cy>
+      <w>16.121</w>
+      <h>41.9797</h>
+      <angle>2.441593</angle>
+    </robndbox>
+  </object>
+</annotation>

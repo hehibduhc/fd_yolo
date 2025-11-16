@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w108p10</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w108p10.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>630</width>
+    <height>473</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>pothole</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.41359999999997</cx>
+      <cy>128.6541</cy>
+      <w>73.0704</w>
+      <h>51.2312</h>
+      <angle>0.2</angle>
+    </robndbox>
+  </object>
+</annotation>

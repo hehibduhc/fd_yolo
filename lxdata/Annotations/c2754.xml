@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>image</folder>
+  <filename>c2754</filename>
+  <path>C:\Users\hzs\Desktop\segmentation dataset\image\c2754.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>crack</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>115.9728</cx>
+      <cy>148.6219</cy>
+      <w>156.8581</w>
+      <h>27.4473</h>
+      <angle>0.2</angle>
+    </robndbox>
+  </object>
+</annotation>

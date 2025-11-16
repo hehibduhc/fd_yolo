@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w98p10</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w98p10.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>652</width>
+    <height>489</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.4839</cx>
+      <cy>78.1882</cy>
+      <w>107.3903</w>
+      <h>17.568</h>
+      <angle>0.3</angle>
+    </robndbox>
+  </object>
+</annotation>

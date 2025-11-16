@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w40p275</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w40p275.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>632</width>
+    <height>474</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>pothole</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.44459999999998</cx>
+      <cy>128.5987</cy>
+      <w>90.8792</w>
+      <h>43.5523</h>
+      <angle>3.041593</angle>
+    </robndbox>
+  </object>
+</annotation>

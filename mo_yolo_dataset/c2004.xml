@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>image</folder>
+  <filename>c2004</filename>
+  <path>C:\Users\hzs\Desktop\segmentation dataset\image\c2004.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>crack</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>143.5003</cx>
+      <cy>120.9188</cy>
+      <w>46.246</w>
+      <h>225.4027</h>
+      <angle>2.841593</angle>
+    </robndbox>
+  </object>
+</annotation>

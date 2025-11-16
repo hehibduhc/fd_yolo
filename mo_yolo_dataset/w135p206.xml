@@ -1,0 +1,84 @@
+<annotation verified="yes">
+  <folder>manual recognized2</folder>
+  <filename>w135p206</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230228_label selecting\manual recognized2\w135p206.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>150.4379</cx>
+      <cy>61.7753</cy>
+      <w>32.5241</w>
+      <h>6.9155</h>
+      <angle>0.3</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>141.6628</cx>
+      <cy>108.3521</cy>
+      <w>39.4495</w>
+      <h>5.9833</h>
+      <angle>0.4</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>99.2765</cx>
+      <cy>191.9431</cy>
+      <w>81.5369</w>
+      <h>7.6826</h>
+      <angle>0.2</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>95.88369999999998</cx>
+      <cy>126.6336</cy>
+      <w>48.8145</w>
+      <h>5.3776</h>
+      <angle>0.3</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>172.7011</cx>
+      <cy>150.0994</cy>
+      <w>50.5887</w>
+      <h>6.3567</h>
+      <angle>0.25</angle>
+    </robndbox>
+  </object>
+</annotation>

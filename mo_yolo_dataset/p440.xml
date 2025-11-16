@@ -1,0 +1,70 @@
+<annotation verified="yes">
+  <folder>temp</folder>
+  <filename>c440</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 &#25968;&#25454;&#38598;\temp\c440.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>189.3371</cx>
+      <cy>122.9363</cy>
+      <w>21.5175</w>
+      <h>199.1743</h>
+      <angle>0.1</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>161.7268</cx>
+      <cy>146.965</cy>
+      <w>13.3079</w>
+      <h>131.6275</h>
+      <angle>0.08</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>67.3417</cx>
+      <cy>93.2826</cy>
+      <w>11.6786</w>
+      <h>69.0587</h>
+      <angle>0.06</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>36.6</cx>
+      <cy>154.6</cy>
+      <w>13.0</w>
+      <h>95.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+</annotation>

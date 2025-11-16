@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w103p10</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w103p10.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>633</width>
+    <height>475</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>184.0039</cx>
+      <cy>55.14259999999999</cy>
+      <w>13.6748</w>
+      <h>36.6114</h>
+      <angle>0.6</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>79.7903</cx>
+      <cy>191.5659</cy>
+      <w>16.0698</w>
+      <h>58.6616</h>
+      <angle>0.6</angle>
+    </robndbox>
+  </object>
+</annotation>

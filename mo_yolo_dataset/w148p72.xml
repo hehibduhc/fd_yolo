@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w148p72</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w148p72.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>633</width>
+    <height>475</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>69.99529999999999</cx>
+      <cy>128.67000000000002</cy>
+      <w>18.4101</w>
+      <h>86.7211</h>
+      <angle>3.041593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>184.76510000000002</cx>
+      <cy>121.32150000000001</cy>
+      <w>18.6615</w>
+      <h>66.1734</h>
+      <angle>2.941593</angle>
+    </robndbox>
+  </object>
+</annotation>

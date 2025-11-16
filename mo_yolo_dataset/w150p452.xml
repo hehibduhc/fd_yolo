@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w150p452</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w150p452.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>632</width>
+    <height>474</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.7176</cx>
+      <cy>128.3981</cy>
+      <w>17.1294</w>
+      <h>157.304</h>
+      <angle>3.081593</angle>
+    </robndbox>
+  </object>
+</annotation>

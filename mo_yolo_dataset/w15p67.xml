@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w15p67</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w15p67.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>556</width>
+    <height>416</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.6028</cx>
+      <cy>128.2188</cy>
+      <w>65.8162</w>
+      <h>31.7064</h>
+      <angle>2.741593</angle>
+    </robndbox>
+  </object>
+</annotation>

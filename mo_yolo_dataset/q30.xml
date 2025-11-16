@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w135p161</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w135p161.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>555</width>
+    <height>417</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>pothole</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.33929999999998</cx>
+      <cy>127.5581</cy>
+      <w>42.6846</w>
+      <h>30.2853</h>
+      <angle>3.0415926</angle>
+    </robndbox>
+  </object>
+</annotation>

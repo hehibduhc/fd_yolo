@@ -1,0 +1,56 @@
+<annotation verified="yes">
+  <folder>temp</folder>
+  <filename>c264</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 &#25968;&#25454;&#38598;\temp\c264.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>120.6102</cx>
+      <cy>59.5828</cy>
+      <w>125.0888</w>
+      <h>31.2096</h>
+      <angle>0.1</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>143.4</cx>
+      <cy>143.8</cy>
+      <w>116.0</w>
+      <h>47.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>96.4</cx>
+      <cy>216.3</cy>
+      <w>92.0</w>
+      <h>20.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+</annotation>

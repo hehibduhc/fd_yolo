@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>test_temp for labeling</folder>
+  <filename>c510</filename>
+  <path>C:\Users\hzs\Desktop\3000dataset\total_split1\used_image\test_temp for labeling\c510.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>crack</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>189.4152</cx>
+      <cy>56.101</cy>
+      <w>16.7863</w>
+      <h>129.7533</h>
+      <angle>0.681431</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>crack</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>102.2891</cx>
+      <cy>176.7837</cy>
+      <w>19.0601</w>
+      <h>170.7925</h>
+      <angle>0.55</angle>
+    </robndbox>
+  </object>
+</annotation>

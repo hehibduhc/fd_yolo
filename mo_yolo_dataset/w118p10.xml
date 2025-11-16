@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>20230221_label selecting</folder>
+  <filename>w118p10</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230221_label selecting\w118p10.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>193.26389999999998</cx>
+      <cy>62.60329999999999</cy>
+      <w>8.4637</w>
+      <h>40.3831</h>
+      <angle>0.8</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>66.30600000000001</cx>
+      <cy>191.0125</cy>
+      <w>49.6256</w>
+      <h>7.7877</h>
+      <angle>2.341593</angle>
+    </robndbox>
+  </object>
+</annotation>

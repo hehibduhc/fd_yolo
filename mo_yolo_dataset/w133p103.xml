@@ -1,0 +1,84 @@
+<annotation verified="yes">
+  <folder>manual recognized2</folder>
+  <filename>w133p103</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230228_label selecting\manual recognized2\w133p103.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>123.4642</cx>
+      <cy>134.7244</cy>
+      <w>9.0677</w>
+      <h>160.3621</h>
+      <angle>3.081593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>168.7624</cx>
+      <cy>134.9026</cy>
+      <w>12.3377</w>
+      <h>171.0339</h>
+      <angle>2.941593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>131.29790000000003</cx>
+      <cy>143.9894</cy>
+      <w>7.0</w>
+      <h>25.0</h>
+      <angle>0.1</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>91.66770000000002</cx>
+      <cy>60.39619999999999</cy>
+      <w>7.3952</w>
+      <h>29.0698</h>
+      <angle>3.041593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>71.11149999999998</cx>
+      <cy>51.2739</cy>
+      <w>8.6772</w>
+      <h>27.4342</h>
+      <angle>3.041593</angle>
+    </robndbox>
+  </object>
+</annotation>

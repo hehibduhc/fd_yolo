@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w95p49</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w95p49.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>631</width>
+    <height>473</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.1572</cx>
+      <cy>128.1989</cy>
+      <w>20.5227</w>
+      <h>103.8869</h>
+      <angle>3.091593</angle>
+    </robndbox>
+  </object>
+</annotation>

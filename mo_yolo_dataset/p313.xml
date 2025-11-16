@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>temp</folder>
+  <filename>c313</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 &#25968;&#25454;&#38598;\temp\c313.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>130.1303</cx>
+      <cy>157.5114</cy>
+      <w>228.1665</w>
+      <h>82.2148</h>
+      <angle>0.4</angle>
+    </robndbox>
+  </object>
+</annotation>

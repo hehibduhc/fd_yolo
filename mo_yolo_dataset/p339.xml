@@ -1,0 +1,56 @@
+<annotation verified="yes">
+  <folder>temp3</folder>
+  <filename>p339</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 &#25968;&#25454;&#38598;\clean\temp3\p339.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>148.2917</cx>
+      <cy>182.0937</cy>
+      <w>17.6106</w>
+      <h>70.3593</h>
+      <angle>2.841593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>122.85</cx>
+      <cy>155.5</cy>
+      <w>245.7</w>
+      <h>155.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>97.8364</cx>
+      <cy>185.4428</cy>
+      <w>13.8675</w>
+      <h>61.087</h>
+      <angle>2.941593</angle>
+    </robndbox>
+  </object>
+</annotation>

@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>manual recognized2</folder>
+  <filename>w144p4</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230228_label selecting\manual recognized2\w144p4.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>412</width>
+    <height>412</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>129.02820000000003</cx>
+      <cy>245.6671</cy>
+      <w>239.0154</w>
+      <h>91.956</h>
+      <angle>2.541593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>314.5005</cx>
+      <cy>142.3277</cy>
+      <w>185.7848</w>
+      <h>51.3956</h>
+      <angle>2.641593</angle>
+    </robndbox>
+  </object>
+</annotation>

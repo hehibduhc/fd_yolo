@@ -1,0 +1,56 @@
+<annotation verified="yes">
+  <folder>temp3</folder>
+  <filename>w125p44</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 &#25968;&#25454;&#38598;\clean\temp3\w125p44.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>172.2823</cx>
+      <cy>120.1833</cy>
+      <w>11.2864</w>
+      <h>54.0337</h>
+      <angle>0.5</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>113.1251</cx>
+      <cy>145.2297</cy>
+      <w>11.5265</w>
+      <h>35.1478</h>
+      <angle>0.2</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>156.2867</cx>
+      <cy>129.1922</cy>
+      <w>147.4004</w>
+      <h>64.0392</h>
+      <angle>2.741593</angle>
+    </robndbox>
+  </object>
+</annotation>

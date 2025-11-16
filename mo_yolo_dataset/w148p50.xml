@@ -1,0 +1,70 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w148p50</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w148p50.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>633</width>
+    <height>475</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>256.4832</cx>
+      <cy>129.395</cy>
+      <w>12.0</w>
+      <h>55.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>297.9832</cx>
+      <cy>124.89500000000001</cy>
+      <w>17.0</w>
+      <h>40.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>71.48320000000001</cx>
+      <cy>165.39499999999998</cy>
+      <w>16.0</w>
+      <h>61.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>16.48320000000001</cx>
+      <cy>173.39499999999998</cy>
+      <w>24.0</w>
+      <h>73.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+</annotation>

@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w97p147</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w97p147.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>630</width>
+    <height>473</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>47.0561</cx>
+      <cy>52.2669</cy>
+      <w>20.2907</w>
+      <h>93.3454</h>
+      <angle>0.9</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>311.803</cx>
+      <cy>303.4071</cy>
+      <w>111.1052</w>
+      <h>24.0063</h>
+      <angle>2.641593</angle>
+    </robndbox>
+  </object>
+</annotation>

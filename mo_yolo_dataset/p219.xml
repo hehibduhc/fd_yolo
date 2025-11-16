@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>temp3</folder>
+  <filename>p219</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 &#25968;&#25454;&#38598;\clean\temp3\p219.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>124.4</cx>
+      <cy>122.3</cy>
+      <w>44.0</w>
+      <h>14.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>121.0899</cx>
+      <cy>127.5</cy>
+      <w>161.2202</w>
+      <h>255.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+</annotation>

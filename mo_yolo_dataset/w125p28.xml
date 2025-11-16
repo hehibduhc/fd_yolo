@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>manual recognized1</folder>
+  <filename>w125p28</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230228_label selecting\manual recognized1\w125p28.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>117.76799999999997</cx>
+      <cy>133.4481</cy>
+      <w>43.9489</w>
+      <h>8.1396</h>
+      <angle>0.01</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>147.40499999999997</cx>
+      <cy>126.35640000000001</cy>
+      <w>25.5223</w>
+      <h>8.7614</h>
+      <angle>0.2</angle>
+    </robndbox>
+  </object>
+</annotation>

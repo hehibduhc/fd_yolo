@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>temp</folder>
+  <filename>c260</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 &#25968;&#25454;&#38598;\temp\c260.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>121.2354</cx>
+      <cy>76.4549</cy>
+      <w>177.9657</w>
+      <h>32.4458</h>
+      <angle>3.051593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>107.4926</cx>
+      <cy>200.4737</cy>
+      <w>94.2629</w>
+      <h>13.5259</h>
+      <angle>3.111593</angle>
+    </robndbox>
+  </object>
+</annotation>

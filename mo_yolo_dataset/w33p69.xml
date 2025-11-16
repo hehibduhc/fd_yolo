@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w33p69</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w33p69.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>632</width>
+    <height>474</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>56.48320000000001</cx>
+      <cy>103.39499999999998</cy>
+      <w>78.0</w>
+      <h>22.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>175.9832</cx>
+      <cy>155.89499999999998</cy>
+      <w>129.0</w>
+      <h>17.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+</annotation>

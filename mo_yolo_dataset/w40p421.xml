@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>testing new_1</folder>
+  <filename>w40p421</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\testing new_1\w40p421.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>344</width>
+    <height>344</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>162.5</cx>
+      <cy>162.5</cy>
+      <w>317.0</w>
+      <h>97.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+</annotation>

@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>temp</folder>
+  <filename>c427</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 &#25968;&#25454;&#38598;\temp\c427.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>135.6837</cx>
+      <cy>121.9217</cy>
+      <w>17.2354</w>
+      <h>109.7553</h>
+      <angle>0.04</angle>
+    </robndbox>
+  </object>
+</annotation>

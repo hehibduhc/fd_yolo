@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>manual recognized2</folder>
+  <filename>w143p38</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230228_label selecting\manual recognized2\w143p38.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>409</width>
+    <height>409</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>pothole</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>265.5197</cx>
+      <cy>292.4238</cy>
+      <w>137.9942</w>
+      <h>185.9915</h>
+      <angle>2.441593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>pothole</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>98.2011</cx>
+      <cy>61.240700000000004</cy>
+      <w>124.0</w>
+      <h>101.0</h>
+      <angle>3.041593</angle>
+    </robndbox>
+  </object>
+</annotation>

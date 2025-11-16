@@ -1,0 +1,56 @@
+<annotation verified="yes">
+  <folder>manual recognized2</folder>
+  <filename>w133p34</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230228_label selecting\manual recognized2\w133p34.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>329</width>
+    <height>329</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>304.9046</cx>
+      <cy>146.2864</cy>
+      <w>11.8805</w>
+      <h>146.6904</h>
+      <angle>2.941593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>43.26690000000001</cx>
+      <cy>135.3701</cy>
+      <w>10.2676</w>
+      <h>73.1111</h>
+      <angle>2.641593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>20.228099999999998</cx>
+      <cy>128.5927</cy>
+      <w>10.5654</w>
+      <h>47.6978</h>
+      <angle>2.641593</angle>
+    </robndbox>
+  </object>
+</annotation>

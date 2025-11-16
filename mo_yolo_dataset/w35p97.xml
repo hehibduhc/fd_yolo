@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>testing new_1</folder>
+  <filename>w35p97</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\testing new_1\w35p97.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>107.3648</cx>
+      <cy>122.5555</cy>
+      <w>37.434</w>
+      <h>11.9202</h>
+      <angle>0.28</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>152.0</cx>
+      <cy>130.5</cy>
+      <w>38.0</w>
+      <h>13.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+</annotation>

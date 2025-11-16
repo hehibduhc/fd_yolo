@@ -1,0 +1,56 @@
+<annotation verified="yes">
+  <folder>testing new_1</folder>
+  <filename>w40p493</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\testing new_1\w40p493.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>72.5</cx>
+      <cy>51.5</cy>
+      <w>29.0</w>
+      <h>9.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>58.5</cx>
+      <cy>106.5</cy>
+      <w>35.0</w>
+      <h>11.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>131.9064</cx>
+      <cy>188.8348</cy>
+      <w>172.8063</w>
+      <h>11.0648</h>
+      <angle>0.18</angle>
+    </robndbox>
+  </object>
+</annotation>

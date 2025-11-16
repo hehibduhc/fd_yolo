@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>manual recognized2</folder>
+  <filename>w146p68</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230228_label selecting\manual recognized2\w146p68.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>337</width>
+    <height>337</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>215.95499999999998</cx>
+      <cy>161.1551</cy>
+      <w>229.2547</w>
+      <h>51.3055</h>
+      <angle>2.941593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>92.97820000000002</cx>
+      <cy>174.4485</cy>
+      <w>167.3963</w>
+      <h>68.525</h>
+      <angle>2.941593</angle>
+    </robndbox>
+  </object>
+</annotation>

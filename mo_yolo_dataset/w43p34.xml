@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>testing new_1</folder>
+  <filename>w43p34</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\testing new_1\w43p34.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>322</width>
+    <height>322</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>260.5</cx>
+      <cy>159.5</cy>
+      <w>109.0</w>
+      <h>106.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>21.5</cx>
+      <cy>152.5</cy>
+      <w>43.0</w>
+      <h>34.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+</annotation>

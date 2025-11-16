@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>temp3</folder>
+  <filename>w61p5</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 &#25968;&#25454;&#38598;\clean\temp3\w61p5.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.4832</cx>
+      <cy>128.395</cy>
+      <w>122.0</w>
+      <h>136.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>113.8179</cx>
+      <cy>127.0805</cy>
+      <w>15.8513</w>
+      <h>96.8491</h>
+      <angle>2.821593</angle>
+    </robndbox>
+  </object>
+</annotation>

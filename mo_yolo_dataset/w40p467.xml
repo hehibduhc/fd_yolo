@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>testing new_1</folder>
+  <filename>w40p467</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\testing new_1\w40p467.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.023</cx>
+      <cy>128.519</cy>
+      <w>11.7841</w>
+      <h>54.3469</h>
+      <angle>3.071593</angle>
+    </robndbox>
+  </object>
+</annotation>

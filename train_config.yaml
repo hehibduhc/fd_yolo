@@ -1,0 +1,23 @@
+angle_prior_lambda: 0.2   # 起步 0.1~0.3
+angle_prior_beta:   0.5   # 起步 0.3~0.7
+
+
+# train_config.yaml
+epochs: 100
+batch: 8
+imgsz: 640
+
+# 数据增强相关参数（设为False关闭对应增强）
+flipud: False  # 关闭上下翻转
+fliplr: False  # 关闭左右翻转
+mosaic: False  # 关闭马赛克增强（多张图拼接）
+mixup: False   # 关闭mixup增强（图像混合）
+copy_paste: False  # 关闭copy-paste增强
+degrees: 0.0   # 关闭旋转增强（默认-10.0~10.0，设为0禁用）
+translate: 0.0 # 关闭平移增强（默认-0.1~0.1，设为0禁用）
+scale: 0.0     # 关闭缩放增强（默认0.1~1.0，设为0禁用）
+shear: 0.0     # 关闭剪切增强（默认-2.0~2.0，设为0禁用）
+perspective: 0.0  # 关闭透视变换（默认0.001，设为0禁用）
+hsv_h: 0.0     # 关闭H通道（色调）增强（默认0.015，设为0禁用）
+hsv_s: 0.0     # 关闭S通道（饱和度）增强
+hsv_v: 0.0     # 关闭V通道（亮度）增强

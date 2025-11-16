@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>image</folder>
+  <filename>c2721</filename>
+  <path>C:\Users\hzs\Desktop\segmentation dataset\image\c2721.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>crack</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>168.9978</cx>
+      <cy>144.9485</cy>
+      <w>111.1897</w>
+      <h>26.0637</h>
+      <angle>3.022476</angle>
+    </robndbox>
+  </object>
+</annotation>

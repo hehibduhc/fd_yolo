@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>20230221_label selecting</folder>
+  <filename>w123p19</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230221_label selecting\w123p19.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>170.66770000000002</cx>
+      <cy>66.591</cy>
+      <w>22.0</w>
+      <h>101.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+</annotation>

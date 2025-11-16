@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>testing new_1</folder>
+  <filename>w36p10</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\testing new_1\w36p10.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.0</cx>
+      <cy>129.0</cy>
+      <w>26.0</w>
+      <h>12.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+</annotation>

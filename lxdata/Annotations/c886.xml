@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>image</folder>
+  <filename>c886</filename>
+  <path>C:\Users\hzs\Desktop\segmentation dataset\image\c886.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>crack</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>77.4728</cx>
+      <cy>119.6647</cy>
+      <w>64.6385</w>
+      <h>11.9365</h>
+      <angle>0.4</angle>
+    </robndbox>
+  </object>
+</annotation>

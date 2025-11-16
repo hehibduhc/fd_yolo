@@ -1,0 +1,70 @@
+<annotation verified="yes">
+  <folder>temp3</folder>
+  <filename>w181p35</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 &#25968;&#25454;&#38598;\clean\temp3\w181p35.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.1045</cx>
+      <cy>105.8369</cy>
+      <w>39.0926</w>
+      <h>8.3174</h>
+      <angle>0.11</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>131.7212</cx>
+      <cy>147.2392</cy>
+      <w>33.354</w>
+      <h>9.041</h>
+      <angle>0.31</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>130.7784</cx>
+      <cy>179.2018</cy>
+      <w>29.1681</w>
+      <h>6.3246</h>
+      <angle>0.2</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>130.6886</cx>
+      <cy>213.5102</cy>
+      <w>30.3708</w>
+      <h>5.2627</h>
+      <angle>0.4</angle>
+    </robndbox>
+  </object>
+</annotation>

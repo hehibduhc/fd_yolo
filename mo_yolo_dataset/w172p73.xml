@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>manual recognized1</folder>
+  <filename>w172p73</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230228_label selecting\manual recognized1\w172p73.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>266</width>
+    <height>266</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>136.81830000000002</cx>
+      <cy>243.59730000000002</cy>
+      <w>103.2133</w>
+      <h>8.506</h>
+      <angle>0.3</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>124.00439999999998</cx>
+      <cy>12.162599999999998</cy>
+      <w>89.2639</w>
+      <h>11.1945</h>
+      <angle>3.101593</angle>
+    </robndbox>
+  </object>
+</annotation>

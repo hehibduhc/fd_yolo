@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>testing new_1</folder>
+  <filename>w40p175</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\testing new_1\w40p175.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.7263</cx>
+      <cy>132.2817</cy>
+      <w>11.6091</w>
+      <h>49.3484</h>
+      <angle>0.06</angle>
+    </robndbox>
+  </object>
+</annotation>

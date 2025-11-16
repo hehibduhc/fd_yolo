@@ -1,0 +1,56 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w33p73</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w33p73.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>632</width>
+    <height>474</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>106.13170000000002</cx>
+      <cy>130.9337</cy>
+      <w>188.9532</w>
+      <h>17.336</h>
+      <angle>0.07</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>179.90159999999997</cx>
+      <cy>173.928</cy>
+      <w>349.8372</w>
+      <h>18.081</h>
+      <angle>0.08</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>126.30829999999997</cx>
+      <cy>228.05470000000003</cy>
+      <w>242.7508</w>
+      <h>23.6115</h>
+      <angle>0.03</angle>
+    </robndbox>
+  </object>
+</annotation>

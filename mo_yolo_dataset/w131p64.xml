@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>20230226_label selecting</folder>
+  <filename>w131p64</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230226_label selecting\w131p64.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>145.57690000000002</cx>
+      <cy>127.8003</cy>
+      <w>6.9236</w>
+      <h>21.6947</h>
+      <angle>2.961593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>120.85520000000002</cx>
+      <cy>128.3918</cy>
+      <w>32.0054</w>
+      <h>7.7333</h>
+      <angle>2.441593</angle>
+    </robndbox>
+  </object>
+</annotation>

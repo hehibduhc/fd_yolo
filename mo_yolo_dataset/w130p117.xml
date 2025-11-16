@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>20230226_label selecting</folder>
+  <filename>w130p117</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230226_label selecting\w130p117.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>pothole</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.4273</cx>
+      <cy>128.3879</cy>
+      <w>33.9964</w>
+      <h>20.5843</h>
+      <angle>0.3</angle>
+    </robndbox>
+  </object>
+</annotation>

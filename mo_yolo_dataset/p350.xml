@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>temp3</folder>
+  <filename>p350</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 &#25968;&#25454;&#38598;\clean\temp3\p350.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>105.6</cx>
+      <cy>133.6</cy>
+      <w>183.0</w>
+      <h>223.0</h>
+      <angle>0.0</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>59.0015</cx>
+      <cy>104.7382</cy>
+      <w>43.5241</w>
+      <h>12.9155</h>
+      <angle>0.3</angle>
+    </robndbox>
+  </object>
+</annotation>

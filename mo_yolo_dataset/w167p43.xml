@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>20230226_label selecting</folder>
+  <filename>w167p43</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230226_label selecting\w167p43.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>180.156</cx>
+      <cy>128.0443</cy>
+      <w>69.0034</w>
+      <h>47.2644</h>
+      <angle>3.041593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>93.84460000000001</cx>
+      <cy>126.114</cy>
+      <w>106.0</w>
+      <h>20.0</h>
+      <angle>3.041593</angle>
+    </robndbox>
+  </object>
+</annotation>

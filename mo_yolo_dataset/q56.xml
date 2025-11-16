@@ -1,0 +1,42 @@
+<annotation verified="yes">
+  <folder>20230226_label selecting</folder>
+  <filename>w151p158</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230226_label selecting\w151p158.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>256</width>
+    <height>256</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>pothole</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>131.6189</cx>
+      <cy>138.98719999999997</cy>
+      <w>180.3523</w>
+      <h>91.165</h>
+      <angle>2.8415926000000002</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>pothole</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>93.32459999999998</cx>
+      <cy>87.01799999999997</cy>
+      <w>129.6509</w>
+      <h>55.3128</h>
+      <angle>2.9415926</angle>
+    </robndbox>
+  </object>
+</annotation>

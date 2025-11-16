@@ -1,0 +1,70 @@
+<annotation verified="yes">
+  <folder>20230226_label selecting</folder>
+  <filename>w201p3</filename>
+  <path>E:\何增胜\大学生创新项目\20220708【大创课题数据集标注资料】\20230226_label selecting\w201p3.jpg</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>407</width>
+    <height>354</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>213.788</cx>
+      <cy>273.0571</cy>
+      <w>12.5827</w>
+      <h>49.6728</h>
+      <angle>2.441593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>399.4848</cx>
+      <cy>307.7059</cy>
+      <w>5.9343</w>
+      <h>23.297</h>
+      <angle>3.041593</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>327.3679</cx>
+      <cy>277.6377</cy>
+      <w>31.975</w>
+      <h>6.5</h>
+      <angle>0.1</angle>
+    </robndbox>
+  </object>
+  <object>
+    <type>robndbox</type>
+    <name>steel exposed</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>13.4118</cx>
+      <cy>168.8144</cy>
+      <w>6.9499</w>
+      <h>21.4515</h>
+      <angle>0.6</angle>
+    </robndbox>
+  </object>
+</annotation>

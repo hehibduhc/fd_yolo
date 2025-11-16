@@ -1,0 +1,28 @@
+<annotation verified="yes">
+  <folder>added</folder>
+  <filename>w95p65</filename>
+  <path>C:\Users\hzs\Desktop\Mask DO-YOLOv4 数据集\added\w95p65.png</path>
+  <source>
+    <database>Unknown</database>
+  </source>
+  <size>
+    <width>631</width>
+    <height>473</height>
+    <depth>3</depth>
+  </size>
+  <segmented>0</segmented>
+  <object>
+    <type>robndbox</type>
+    <name>breakage</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+    <robndbox>
+      <cx>128.7527</cx>
+      <cy>128.7209</cy>
+      <w>176.7621</w>
+      <h>49.5745</h>
+      <angle>0.4</angle>
+    </robndbox>
+  </object>
+</annotation>
