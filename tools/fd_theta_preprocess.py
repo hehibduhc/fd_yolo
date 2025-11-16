@@ -24,7 +24,14 @@ directory: python tools/fd_theta_preprocess.py path/to/images_dir --out fd_theta
 with masks: python tools/fd_theta_preprocess.py mo_yolo_dataset/c9.jpg --mask mo_yolo_dataset/c9.png --fd box --orientation pca --save_viz --viz_alpha 0.6
 visilization:python tools/fd_theta_preprocess.py path/to/img_or_dir --out fd_theta_out --save_viz --viz_alpha 0.6
 
+``--mask`` may point to either a single mask file or a directory containing
+per-image masks whose file names share the same stem as the corresponding
+image (e.g., ``foo.jpg`` → ``foo.png``).
 """
+
+
+IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp")
+MASK_EXTENSIONS = IMAGE_EXTENSIONS
 
 
 @dataclass
@@ -407,6 +414,20 @@ def save_visualizations(
     cv2.imwrite(theta_overlay_path, theta_overlay)
 
 
+def build_mask_lookup(mask_dir: str) -> dict[str, str]:
+    lookup: dict[str, str] = {}
+    try:
+        entries = os.listdir(mask_dir)
+    except FileNotFoundError:
+        return lookup
+    for name in entries:
+        if not name.lower().endswith(MASK_EXTENSIONS):
+            continue
+        stem = os.path.splitext(name)[0].lower()
+        lookup[stem] = os.path.join(mask_dir, name)
+    return lookup
+
+
 def preprocess_image(
     image_path: str,
     out_dir: str,
@@ -520,15 +541,24 @@ def main():
     inputs: list[str] = []
     if os.path.isdir(args.input):
         for name in os.listdir(args.input):
-            if name.lower().endswith((".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp")):
+            if name.lower().endswith(IMAGE_EXTENSIONS):
                 inputs.append(os.path.join(args.input, name))
     else:
         inputs.append(args.input)
 
     os.makedirs(args.out, exist_ok=True)
 
+    mask_file = args.mask if args.mask and os.path.isfile(args.mask) else None
+    mask_dir = args.mask if args.mask and os.path.isdir(args.mask) else None
+    mask_lookup = build_mask_lookup(mask_dir) if mask_dir else {}
+
     for img_path in inputs:
-        mask_path = args.mask
+        mask_path = mask_file
+        if mask_dir:
+            stem = os.path.splitext(os.path.basename(img_path))[0].lower()
+            mask_path = mask_lookup.get(stem)
+            if mask_path is None:
+                print(f"Warning: mask for '{img_path}' not found in directory '{mask_dir}'")
         boxes_path = args.yolo_boxes
 
         if args.boxes_json and os.path.isfile(args.boxes_json) and not boxes_path:
