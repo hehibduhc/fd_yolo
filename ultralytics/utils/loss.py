@@ -267,7 +267,7 @@ class v8DetectionLoss:
         # dfl_conf = pred_distri.view(batch_size, -1, 4, self.reg_max).detach().softmax(-1)
         # dfl_conf = (dfl_conf.amax(-1).mean(-1) + dfl_conf.amax(-1).amin(-1)) / 2
 
-        _, target_bboxes, target_scores, fg_mask, target_gt_idx = self.assigner(
+        _, target_bboxes, target_scores, fg_mask, _target_gt_idx = self.assigner(
             # pred_scores.detach().sigmoid() * 0.8 + dfl_conf.unsqueeze(-1) * 0.2,
             pred_scores.detach().sigmoid(),
             (pred_bboxes.detach() * stride_tensor).type(gt_bboxes.dtype),
@@ -738,7 +738,7 @@ class v8OBBLoss(v8DetectionLoss):
                         batch_size,
                         gt_bboxes.shape[1],
                     )
-            
+
         except RuntimeError as e:
             raise TypeError(
                 "ERROR ❌ OBB dataset incorrectly formatted or not a OBB dataset.\n"
@@ -784,7 +784,7 @@ class v8OBBLoss(v8DetectionLoss):
             )
             if angle_prior_loss is not None:
                 loss[0] = loss[0] + angle_prior_loss
-        
+
         else:
             loss[0] += (pred_angle * 0).sum()
 
@@ -793,6 +793,7 @@ class v8OBBLoss(v8DetectionLoss):
         loss[2] *= self.hyp.dfl  # dfl gain
 
         return loss * batch_size, loss.detach()  # loss(box, cls, dfl)
+
     @staticmethod
     def _scatter_gt_feature(
         values: torch.Tensor,
@@ -813,6 +814,7 @@ class v8OBBLoss(v8DetectionLoss):
                 n = matches.sum().item()
                 out[img_id, :n] = values[matches]
         return out
+
     def _angle_prior_loss(
         self,
         pred_angle: torch.Tensor,
@@ -822,12 +824,7 @@ class v8OBBLoss(v8DetectionLoss):
         gt_fd_norm: torch.Tensor | None,
     ) -> torch.Tensor | None:
         """Compute cosine-based angle prior regularization for matched positives."""
-        if (
-            self.angle_prior_lambda <= 0
-            or gt_theta_prior is None
-            or gt_theta_prior.shape[1] == 0
-            or not fg_mask.any()
-        ):
+        if self.angle_prior_lambda <= 0 or gt_theta_prior is None or gt_theta_prior.shape[1] == 0 or not fg_mask.any():
             return None
         max_boxes = gt_theta_prior.shape[1]
         if max_boxes == 0:

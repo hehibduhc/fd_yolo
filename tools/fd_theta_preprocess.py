@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import json
 import math
@@ -9,7 +11,8 @@ import cv2
 import numpy as np
 
 try:
-    from skimage.morphology import skeletonize, thin
+    from skimage.morphology import thin
+
     SKIMAGE_OK = True
 except Exception:
     SKIMAGE_OK = False
@@ -41,10 +44,10 @@ class PreprocessConfig:
     normalize_mode: str = "linear"  # or "quantile"
     d_min: float = 1.1
     d_max: float = 2.0
-    quantiles: Tuple[float, float] = (0.01, 0.99)
-    thresholds: Tuple[float, float] = (0.3, 0.6)
+    quantiles: tuple[float, float] = (0.01, 0.99)
+    thresholds: tuple[float, float] = (0.3, 0.6)
     max_bridge: int = 7  # for simple morphology repair
-    canny_low_high: Tuple[int, int] = (50, 150)
+    canny_low_high: tuple[int, int] = (50, 150)
     save_viz: bool = False
     viz_alpha: float = 0.5
 
@@ -65,17 +68,17 @@ def ensure_bgr(image: np.ndarray) -> np.ndarray:
     return image
 
 
-def boxes_to_mask(shape: Tuple[int, int], boxes_xyxy: List[Tuple[int, int, int, int]]) -> np.ndarray:
+def boxes_to_mask(shape: tuple[int, int], boxes_xyxy: list[tuple[int, int, int, int]]) -> np.ndarray:
     h, w = shape
     mask = np.zeros((h, w), dtype=np.uint8)
     for x1, y1, x2, y2 in boxes_xyxy:
         x1, y1 = max(0, int(x1)), max(0, int(y1))
         x2, y2 = min(w - 1, int(x2)), min(h - 1, int(y2))
-        mask[y1:y2 + 1, x1:x2 + 1] = 255
+        mask[y1 : y2 + 1, x1 : x2 + 1] = 255
     return mask
 
 
-def simple_crack_seg(gray: np.ndarray, roi_mask: Optional[np.ndarray], canny_low_high=(50, 150)) -> np.ndarray:
+def simple_crack_seg(gray: np.ndarray, roi_mask: np.ndarray | None, canny_low_high=(50, 150)) -> np.ndarray:
     # Edge-based segmentation with morphology cleanup
     edges = cv2.Canny(gray, canny_low_high[0], canny_low_high[1])
     if roi_mask is not None:
@@ -93,9 +96,9 @@ def simple_crack_seg(gray: np.ndarray, roi_mask: Optional[np.ndarray], canny_low
 
 def foreground_from_annotations(
     image: np.ndarray,
-    label_mask_path: Optional[str] = None,
-    yolo_boxes_path: Optional[str] = None,
-    cfg: Optional[PreprocessConfig] = None,
+    label_mask_path: str | None = None,
+    yolo_boxes_path: str | None = None,
+    cfg: PreprocessConfig | None = None,
 ) -> np.ndarray:
     gray = ensure_gray(image)
     roi = None
@@ -109,8 +112,8 @@ def foreground_from_annotations(
     if yolo_boxes_path and os.path.isfile(yolo_boxes_path):
         # Expect YOLO txt: class cx cy w h normalized
         h, w = gray.shape
-        boxes: List[Tuple[int, int, int, int]] = []
-        with open(yolo_boxes_path, "r", encoding="utf-8") as f:
+        boxes: list[tuple[int, int, int, int]] = []
+        with open(yolo_boxes_path, encoding="utf-8") as f:
             for line in f:
                 parts = line.strip().split()
                 if len(parts) < 5:
@@ -189,7 +192,7 @@ def orientation_pca_on_skeleton(skel: np.ndarray, window: int = 21, stride: int 
     xs = range(0, w, stride)
     for y in ys:
         for x in xs:
-            win = padded[y:y + window, x:x + window]
+            win = padded[y : y + window, x : x + window]
             pts = np.column_stack(np.nonzero(win))
             if pts.shape[0] < 5:
                 continue
@@ -228,14 +231,16 @@ def _linear_regression_slope(x: np.ndarray, y: np.ndarray) -> float:
     return float(slope)
 
 
-def fd_box_counting_local(binary: np.ndarray, window: int = 33, stride: int = 8, scales: List[int] = (2, 4, 8, 16)) -> np.ndarray:
+def fd_box_counting_local(
+    binary: np.ndarray, window: int = 33, stride: int = 8, scales: list[int] = (2, 4, 8, 16)
+) -> np.ndarray:
     h, w = binary.shape
     pad = window // 2
     bin_pad = np.pad(binary, pad, mode="constant")
     D_map = np.full((h, w), np.nan, dtype=np.float32)
     for y in range(0, h, stride):
         for x in range(0, w, stride):
-            patch = bin_pad[y:y + window, x:x + window]
+            patch = bin_pad[y : y + window, x : x + window]
             if patch.size == 0:
                 continue
             counts = []
@@ -265,11 +270,13 @@ def fd_box_counting_local(binary: np.ndarray, window: int = 33, stride: int = 8,
                 D = max(1.0, min(2.5, slope))
             else:
                 D = np.nan
-            D_map[y:y + stride, x:x + stride] = D
+            D_map[y : y + stride, x : x + stride] = D
     return D_map
 
 
-def fd_differential_box_counting_local(gray: np.ndarray, window: int = 33, stride: int = 8, scales: List[int] = (2, 4, 8, 16)) -> np.ndarray:
+def fd_differential_box_counting_local(
+    gray: np.ndarray, window: int = 33, stride: int = 8, scales: list[int] = (2, 4, 8, 16)
+) -> np.ndarray:
     # Normalize gray to [0, 255]
     g = ensure_gray(gray)
     g = cv2.normalize(g, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
@@ -280,14 +287,14 @@ def fd_differential_box_counting_local(gray: np.ndarray, window: int = 33, strid
     G = 256.0
     for y in range(0, h, stride):
         for x in range(0, w, stride):
-            patch = gpad[y:y + window, x:x + window]
+            patch = gpad[y : y + window, x : x + window]
             counts = []
             inv_eps = []
             for s in scales:
                 # Partition into s x s grid; intensity axis partitioned proportionally
                 Hs = window / s
                 Ws = window / s
-                Ng = math.ceil(G / s)
+                math.ceil(G / s)
                 nboxes = 0
                 for i in range(s):
                     for j in range(s):
@@ -300,7 +307,7 @@ def fd_differential_box_counting_local(gray: np.ndarray, window: int = 33, strid
                         gmax = int(cell.max())
                         kmin = math.floor((gmin * s) / G)
                         kmax = math.floor((gmax * s) / G)
-                        nboxes += (kmax - kmin + 1)
+                        nboxes += kmax - kmin + 1
                 if nboxes > 0:
                     counts.append(nboxes)
                     inv_eps.append(s)
@@ -312,7 +319,7 @@ def fd_differential_box_counting_local(gray: np.ndarray, window: int = 33, strid
                 D = max(1.0, min(2.5, slope - 1.0))
             else:
                 D = np.nan
-            D_map[y:y + stride, x:x + stride] = D
+            D_map[y : y + stride, x : x + stride] = D
     return D_map
 
 
@@ -335,7 +342,7 @@ def smooth_and_fill(D_map: np.ndarray, sigma: float) -> np.ndarray:
     return sm
 
 
-def normalize_fd(D: np.ndarray, mode: str, d_min: float, d_max: float, q: Tuple[float, float]) -> np.ndarray:
+def normalize_fd(D: np.ndarray, mode: str, d_min: float, d_max: float, q: tuple[float, float]) -> np.ndarray:
     if mode == "quantile":
         lo = np.nanquantile(D, q[0])
         hi = np.nanquantile(D, q[1])
@@ -355,7 +362,7 @@ def colorize_fd_map(Dn: np.ndarray) -> np.ndarray:
     return cv2.applyColorMap(fd_uint8, cv2.COLORMAP_TURBO)
 
 
-def colorize_theta_map(theta: np.ndarray, weight: Optional[np.ndarray] = None) -> np.ndarray:
+def colorize_theta_map(theta: np.ndarray, weight: np.ndarray | None = None) -> np.ndarray:
     theta = np.nan_to_num(theta, nan=0.0)
     theta_norm = ((theta + np.pi / 2.0) % np.pi) / np.pi
     hue = (theta_norm * 179).astype(np.uint8)
@@ -369,7 +376,7 @@ def colorize_theta_map(theta: np.ndarray, weight: Optional[np.ndarray] = None) -
     return cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
 
-def overlay_with_mask(base: np.ndarray, overlay: np.ndarray, mask: Optional[np.ndarray], alpha: float) -> np.ndarray:
+def overlay_with_mask(base: np.ndarray, overlay: np.ndarray, mask: np.ndarray | None, alpha: float) -> np.ndarray:
     base_bgr = ensure_bgr(base).astype(np.float32)
     overlay = ensure_bgr(overlay).astype(np.float32)
     alpha = np.clip(alpha, 0.0, 1.0)
@@ -424,10 +431,10 @@ def build_mask_lookup(mask_dir: str) -> Dict[str, str]:
 def preprocess_image(
     image_path: str,
     out_dir: str,
-    label_mask_path: Optional[str],
-    yolo_boxes_path: Optional[str],
+    label_mask_path: str | None,
+    yolo_boxes_path: str | None,
     cfg: PreprocessConfig,
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     os.makedirs(out_dir, exist_ok=True)
     img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
     if img is None:
@@ -450,7 +457,9 @@ def preprocess_image(
     if cfg.fd_method == "box":
         D_local = fd_box_counting_local((fg > 0).astype(np.uint8), window=max(33, cfg.window | 1), stride=cfg.stride)
     else:
-        D_local = fd_differential_box_counting_local(ensure_gray(img), window=max(33, cfg.window | 1), stride=cfg.stride)
+        D_local = fd_differential_box_counting_local(
+            ensure_gray(img), window=max(33, cfg.window | 1), stride=cfg.stride
+        )
 
     # 5) Smooth
     D_sm = smooth_and_fill(D_local, sigma=cfg.smooth_sigma)
@@ -469,11 +478,11 @@ def preprocess_image(
     return fd_path, th_path
 
 
-def parse_boxes_json(box_json_path: str, image_shape: Tuple[int, int]) -> Optional[str]:
+def parse_boxes_json(box_json_path: str, image_shape: tuple[int, int]) -> str | None:
     # Convenience: accept a JSON with xyxy boxes and make a temporary YOLO-like TXT
     # JSON structure: [{"x1":int,"y1":int,"x2":int,"y2":int}, ...]
     try:
-        with open(box_json_path, "r", encoding="utf-8") as f:
+        with open(box_json_path, encoding="utf-8") as f:
             boxes = json.load(f)
     except Exception:
         return None
@@ -529,7 +538,7 @@ def main():
         viz_alpha=args.viz_alpha,
     )
 
-    inputs: List[str] = []
+    inputs: list[str] = []
     if os.path.isdir(args.input):
         for name in os.listdir(args.input):
             if name.lower().endswith(IMAGE_EXTENSIONS):
