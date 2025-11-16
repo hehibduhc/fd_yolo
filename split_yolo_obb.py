@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Split a YOLO OBB dataset into train/val (default 80/20).
 
@@ -27,25 +26,29 @@ import argparse
 import random
 import shutil
 from pathlib import Path
-from typing import List, Tuple, Dict
 
 IMG_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"}
 
-def list_images(images_dir: Path) -> Dict[str, Path]:
+
+def list_images(images_dir: Path) -> dict[str, Path]:
     files = {}
     for p in images_dir.rglob("*"):
         if p.is_file() and p.suffix.lower() in IMG_EXTS:
             files[p.stem] = p
     return files
 
-def list_labels(labels_dir: Path) -> Dict[str, Path]:
+
+def list_labels(labels_dir: Path) -> dict[str, Path]:
     files = {}
     for p in labels_dir.rglob("*.txt"):
         if p.is_file():
             files[p.stem] = p
     return files
 
-def pair_images_labels(images: Dict[str, Path], labels: Dict[str, Path]) -> Tuple[List[Tuple[Path, Path]], List[Path], List[Path]]:
+
+def pair_images_labels(
+    images: dict[str, Path], labels: dict[str, Path]
+) -> tuple[list[tuple[Path, Path]], list[Path], list[Path]]:
     pairs = []
     img_only = []
     lbl_only = []
@@ -59,20 +62,25 @@ def pair_images_labels(images: Dict[str, Path], labels: Dict[str, Path]) -> Tupl
             lbl_only.append(lp)
     return pairs, img_only, lbl_only
 
-def split_pairs(pairs: List[Tuple[Path, Path]], val_ratio: float, seed: int) -> Tuple[List[Tuple[Path, Path]], List[Tuple[Path, Path]]]:
+
+def split_pairs(
+    pairs: list[tuple[Path, Path]], val_ratio: float, seed: int
+) -> tuple[list[tuple[Path, Path]], list[tuple[Path, Path]]]:
     rnd = random.Random(seed)
     rnd.shuffle(pairs)
     n_total = len(pairs)
-    n_val = int(round(n_total * val_ratio))
+    n_val = round(n_total * val_ratio)
     val = pairs[:n_val]
     train = pairs[n_val:]
     return train, val
+
 
 def ensure_dirs(root: Path):
     for sub in ["images/train", "images/val", "labels/train", "labels/val"]:
         (root / sub).mkdir(parents=True, exist_ok=True)
 
-def place_pair(pair: Tuple[Path, Path], dst_root: Path, split: str, mode: str):
+
+def place_pair(pair: tuple[Path, Path], dst_root: Path, split: str, mode: str):
     img_src, lbl_src = pair
     img_dst = dst_root / "images" / split / img_src.name
     lbl_dst = dst_root / "labels" / split / (lbl_src.name)
@@ -93,18 +101,14 @@ def place_pair(pair: Tuple[Path, Path], dst_root: Path, split: str, mode: str):
     else:
         raise ValueError(f"Unknown mode: {mode}")
 
-def write_data_yaml(dst_root: Path, nc: int, names: List[str]):
+
+def write_data_yaml(dst_root: Path, nc: int, names: list[str]):
     yaml_path = dst_root / "data.yaml"
     names_list = "[" + ", ".join(f"'{n}'" for n in names) + "]"
-    content = (
-        f"path: {dst_root.as_posix()}\n"
-        f"train: images/train\n"
-        f"val: images/val\n"
-        f"nc: {nc}\n"
-        f"names: {names_list}\n"
-    )
+    content = f"path: {dst_root.as_posix()}\ntrain: images/train\nval: images/val\nnc: {nc}\nnames: {names_list}\n"
     yaml_path.write_text(content, encoding="utf-8")
     return yaml_path
+
 
 def parse_args():
     ap = argparse.ArgumentParser(description="Split YOLO OBB dataset into train/val.")
@@ -118,6 +122,7 @@ def parse_args():
     ap.add_argument("--nc", type=int, default=1, help="Number of classes (for data.yaml)")
     ap.add_argument("--names", type=str, nargs="*", default=["crack"], help="Class names list (for data.yaml)")
     return ap.parse_args()
+
 
 def main():
     args = parse_args()
@@ -152,6 +157,7 @@ def main():
     print(f"Output root: {args.out}")
     if yaml_path:
         print(f"Wrote data.yaml: {yaml_path}")
+
 
 if __name__ == "__main__":
     main()
