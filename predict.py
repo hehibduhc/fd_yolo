@@ -5,7 +5,7 @@ model = YOLO("yolo11n-obb.pt")  # load an official model
 model = YOLO(r"runs\obb\train12\weights\best.pt")  # load a custom model
 
 # Predict with the model
-results = model(r"crack_images\063.jpg",save = True)  # predict on an image
+results = model(r"crack_images\063.jpg", save=True)  # predict on an image
 
 # Access the results
 for result in results:
