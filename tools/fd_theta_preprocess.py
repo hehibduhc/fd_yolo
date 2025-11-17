@@ -5,6 +5,7 @@ import json
 import math
 import os
 from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -32,7 +33,6 @@ image (e.g., ``foo.jpg`` → ``foo.png``).
 
 IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".tif", ".tiff", ".bmp")
 MASK_EXTENSIONS = IMAGE_EXTENSIONS
-
 
 @dataclass
 class PreprocessConfig:
@@ -414,8 +414,8 @@ def save_visualizations(
     cv2.imwrite(theta_overlay_path, theta_overlay)
 
 
-def build_mask_lookup(mask_dir: str) -> dict[str, str]:
-    lookup: dict[str, str] = {}
+def build_mask_lookup(mask_dir: str) -> Dict[str, str]:
+    lookup: Dict[str, str] = {}
     try:
         entries = os.listdir(mask_dir)
     except FileNotFoundError:
@@ -558,7 +558,9 @@ def main():
             stem = os.path.splitext(os.path.basename(img_path))[0].lower()
             mask_path = mask_lookup.get(stem)
             if mask_path is None:
-                print(f"Warning: mask for '{img_path}' not found in directory '{mask_dir}'")
+                print(
+                    f"Warning: mask for '{img_path}' not found in directory '{mask_dir}'"
+                )
         boxes_path = args.yolo_boxes
 
         if args.boxes_json and os.path.isfile(args.boxes_json) and not boxes_path:
