@@ -13,8 +13,8 @@ structure:
   and ``*_theta.npy`` arrays with matching spatial resolution.
 
 For each label file, the script reads the ground-truth oriented boxes, locates
-box centres within the FD/theta maps, and samples a pair ``(theta_prior, fd_norm)``
-from the pixel containing the centre. The results are saved to
+box centers within the FD/theta maps, and samples a pair ``(theta_prior, fd_norm)``
+from the pixel containing the center. The results are saved to
 ``lxdata/test_fd/train`` as ``*_prior_fd.npy`` arrays of shape ``[N, 2]`` where
 ``N`` is the number of boxes in the image.
 
@@ -33,16 +33,14 @@ from __future__ import annotations
 
 import argparse
 import os
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Tuple
 
 import numpy as np
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Generate (theta_prior, fd_norm) features for each GT box."
-    )
+    parser = argparse.ArgumentParser(description="Generate (theta_prior, fd_norm) features for each GT box.")
     parser.add_argument(
         "--label-dir",
         type=Path,
@@ -88,15 +86,11 @@ def load_labels(label_path: Path) -> np.ndarray:
     if data.size == 0:
         return data.reshape(0, 9)
     if data.shape[1] != 9:
-        raise ValueError(
-            f"Label file {label_path} has {data.shape[1]} columns, expected 9."
-        )
+        raise ValueError(f"Label file {label_path} has {data.shape[1]} columns, expected 9.")
     return data
 
 
-def sample_prior_features(
-    labels: np.ndarray, fd_map: np.ndarray, theta_map: np.ndarray
-) -> np.ndarray:
+def sample_prior_features(labels: np.ndarray, fd_map: np.ndarray, theta_map: np.ndarray) -> np.ndarray:
     if labels.size == 0:
         return np.zeros((0, 2), dtype=np.float32)
 
@@ -105,13 +99,12 @@ def sample_prior_features(
 
     if theta_map.shape != (H, W):
         raise ValueError(
-            "FD map and theta map must have the same spatial dimensions, "
-            f"got {fd_map.shape} and {theta_map.shape}."
+            f"FD map and theta map must have the same spatial dimensions, got {fd_map.shape} and {theta_map.shape}."
         )
 
-    centres = pts.mean(axis=1)
-    cx = np.clip(np.rint(centres[:, 0] * W), 0, W - 1).astype(np.int64)
-    cy = np.clip(np.rint(centres[:, 1] * H), 0, H - 1).astype(np.int64)
+    centers = pts.mean(axis=1)
+    cx = np.clip(np.rint(centers[:, 0] * W), 0, W - 1).astype(np.int64)
+    cy = np.clip(np.rint(centers[:, 1] * H), 0, H - 1).astype(np.int64)
 
     fd_values = fd_map[cy, cx].astype(np.float32)
     theta_values = theta_map[cy, cx].astype(np.float32)
@@ -119,9 +112,7 @@ def sample_prior_features(
     return np.stack([theta_values, fd_values], axis=1)
 
 
-def generate_prior_fd(
-    label_dir: Path, map_dir: Path, out_dir: Path, overwrite: bool = False
-) -> Tuple[int, int]:
+def generate_prior_fd(label_dir: Path, map_dir: Path, out_dir: Path, overwrite: bool = False) -> tuple[int, int]:
     os.makedirs(out_dir, exist_ok=True)
 
     label_files = sorted(p for p in label_dir.iterdir() if p.suffix == ".txt")
@@ -167,7 +158,7 @@ identical to the number of rows in the matching YOLO OBB label file.
 Column meanings::
 
     [0] -> theta_prior (radians, typically in the range (-pi/2, pi/2])
-    [1] -> fd_norm     (normalised FD value in [0, 1])
+    [1] -> fd_norm     (normalized FD value in [0, 1])
 
 Usage example in Python::
 
@@ -200,15 +191,8 @@ def main() -> None:
 
     write_usage_file(args.out_dir)
 
-    print(
-        "\nSummary: processed {processed} files, skipped {skipped}. Output directory: {out_dir}".format(
-            processed=processed, skipped=skipped, out_dir=args.out_dir
-        )
-    )
-    print(
-        "Usage instructions saved to"
-        f" {args.out_dir / 'README_prior_fd_usage.txt'}"
-    )
+    print(f"\nSummary: processed {processed} files, skipped {skipped}. Output directory: {args.out_dir}")
+    print(f"Usage instructions saved to {args.out_dir / 'README_prior_fd_usage.txt'}")
 
 
 if __name__ == "__main__":
