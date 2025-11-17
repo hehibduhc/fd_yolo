@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from ultralytics.utils import LOGGER
 from ultralytics.utils.metrics import OKS_SIGMA
 from ultralytics.utils.ops import crop_mask, xywh2xyxy, xyxy2xywh
 from ultralytics.utils.tal import RotatedTaskAlignedAssigner, TaskAlignedAssigner, dist2bbox, dist2rbox, make_anchors
@@ -664,6 +665,11 @@ class v8OBBLoss(v8DetectionLoss):
         self.bbox_loss = RotatedBboxLoss(self.reg_max).to(self.device)
         self.angle_prior_lambda = float(getattr(self.hyp, "angle_prior_lambda", 0.0))
         self.angle_prior_beta = float(getattr(self.hyp, "angle_prior_beta", 0.0))
+        self.rank = int(getattr(model, "rank", -1))
+        self.loss_angle_prior_log: list[float] = []
+        self.theta_prior_stats: list[tuple[float, float]] = []
+        self.fd_norm_stats: list[tuple[float, float]] = []
+        self._angle_prior_hyp_logged = False
 
     def preprocess(self, targets: torch.Tensor, batch_size: int, scale_tensor: torch.Tensor) -> torch.Tensor:
         """Preprocess targets for oriented bounding box detection."""
@@ -684,6 +690,7 @@ class v8OBBLoss(v8DetectionLoss):
 
     def __call__(self, preds: Any, batch: dict[str, torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor]:
         """Calculate and return the loss for oriented bounding box detection."""
+        self._log_angle_prior_hyp()
         loss = torch.zeros(3, device=self.device)  # box, cls, dfl
         feats, pred_angle = preds if isinstance(preds[0], list) else preds[1]
         batch_size = pred_angle.shape[0]  # batch size, number of masks, mask height, mask width
@@ -703,6 +710,8 @@ class v8OBBLoss(v8DetectionLoss):
         # targets
         theta_prior_tensor = batch.get("theta_prior") if self.angle_prior_lambda > 0 else None
         fd_norm_tensor = batch.get("fd_norm") if self.angle_prior_lambda > 0 else None
+        self._log_prior_tensor_stats(theta_prior_tensor, self.theta_prior_stats, "theta_prior")
+        self._log_prior_tensor_stats(fd_norm_tensor, self.fd_norm_stats, "fd_norm")
         gt_theta_prior = gt_fd_norm = None
         try:
             batch_idx = batch["batch_idx"].view(-1, 1)
@@ -784,6 +793,7 @@ class v8OBBLoss(v8DetectionLoss):
             )
             if angle_prior_loss is not None:
                 loss[0] = loss[0] + angle_prior_loss
+                self._log_angle_prior_loss_value(angle_prior_loss)
         
         else:
             loss[0] += (pred_angle * 0).sum()
@@ -793,6 +803,43 @@ class v8OBBLoss(v8DetectionLoss):
         loss[2] *= self.hyp.dfl  # dfl gain
 
         return loss * batch_size, loss.detach()  # loss(box, cls, dfl)
+
+    def _log_angle_prior_hyp(self) -> None:
+        """Log the configured hyperparameters for the angle prior regularizer once per process."""
+        if self._angle_prior_hyp_logged or self.rank not in (-1, 0):
+            return
+        LOGGER.info(
+            "[AnglePrior] lambda=%.4f, beta=%.4f",
+            self.angle_prior_lambda,
+            self.angle_prior_beta,
+        )
+        self._angle_prior_hyp_logged = True
+
+    def _log_prior_tensor_stats(
+        self,
+        tensor: torch.Tensor | None,
+        store: list[tuple[float, float]],
+        label: str,
+    ) -> None:
+        """Record per-batch statistics for theta_prior and fd_norm tensors."""
+        if tensor is None or tensor.numel() == 0:
+            return
+        values = tensor.detach().float().reshape(-1)
+        if values.numel() == 0:
+            return
+        mean = float(values.mean().item())
+        std = float(values.std(unbiased=False).item()) if values.numel() > 1 else 0.0
+        store.append((mean, std))
+        if self.rank in (-1, 0):
+            LOGGER.info("[AnglePrior] %s mean=%.6f std=%.6f", label, mean, std)
+
+    def _log_angle_prior_loss_value(self, angle_prior_loss: torch.Tensor) -> None:
+        """Track the mean angle prior loss value for every batch."""
+        if self.rank not in (-1, 0):
+            return
+        value = float(angle_prior_loss.detach().item())
+        self.loss_angle_prior_log.append(value)
+        LOGGER.info("[AnglePrior] batch loss=%.6f", value)
     @staticmethod
     def _scatter_gt_feature(
         values: torch.Tensor,

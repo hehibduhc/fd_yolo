@@ -71,7 +71,15 @@ class YOLODataset(BaseDataset):
         >>> dataset.get_labels()
     """
 
-    def __init__(self, *args, data: dict | None = None, task: str = "detect", **kwargs):
+    def __init__(
+        self,
+        *args,
+        data: dict | None = None,
+        task: str = "detect",
+        split: str | None = None,
+        prior_fd_dir: str | Path | dict | None = None,
+        **kwargs,
+    ):
         """Initialize the YOLODataset.
 
         Args:
@@ -84,8 +92,11 @@ class YOLODataset(BaseDataset):
         self.use_keypoints = task == "pose"
         self.use_obb = task == "obb"
         self.data = data
+        self.split = split
         assert not (self.use_segments and self.use_keypoints), "Can not use both segments and keypoints."
+        self._prior_fd_cache: dict[str, np.ndarray] = {}
         super().__init__(*args, channels=self.data.get("channels", 3), **kwargs)
+        self.prior_fd_dir = self._resolve_prior_fd_dir(prior_fd_dir)
 
     def cache_labels(self, path: Path = Path("./labels.cache")) -> dict:
         """Cache dataset labels, check images and read shapes.
@@ -276,7 +287,60 @@ class YOLODataset(BaseDataset):
         else:
             segments = np.zeros((0, segment_resamples, 2), dtype=np.float32)
         label["instances"] = Instances(bboxes, segments, keypoints, bbox_format=bbox_format, normalized=normalized)
+        if self.use_obb and self.prior_fd_dir:
+            theta_prior, fd_norm = self._load_prior_features(label)
+            label["theta_prior"] = theta_prior
+            label["fd_norm"] = fd_norm
         return label
+
+    def _resolve_prior_fd_dir(self, prior_fd_dir: str | Path | dict | None) -> Path | None:
+        """Resolve the directory storing *_prior_fd.npy files for the current dataset split."""
+        candidate: str | Path | None = prior_fd_dir
+        if candidate is None and self.data:
+            candidate = self.data.get("prior_fd_dir")
+        if isinstance(candidate, dict):
+            if self.split in candidate:
+                candidate = candidate[self.split]
+            elif "default" in candidate:
+                candidate = candidate["default"]
+            else:
+                candidate = next(iter(candidate.values()), None)
+        if not candidate:
+            return None
+        path = Path(candidate).expanduser()
+        if not path.is_absolute():
+            base = self.data.get("path") if self.data else None
+            if base:
+                path = Path(base).expanduser() / path
+        return path.resolve()
+
+    def _load_prior_features(self, label: dict) -> tuple[torch.Tensor, torch.Tensor]:
+        """Load (theta_prior, fd_norm) tensors for the provided label dict."""
+        num_labels = int(label.get("cls", np.zeros((0, 1))).shape[0])
+        if num_labels == 0:
+            zeros = torch.zeros((0, 1), dtype=torch.float32)
+            return zeros, zeros.clone()
+        im_file = label.get("im_file")
+        if not im_file:
+            raise ValueError("Image file path is missing while loading prior fd features.")
+        stem = Path(im_file).stem
+        if stem not in self._prior_fd_cache:
+            prior_path = self.prior_fd_dir / f"{stem}_prior_fd.npy"
+            if not prior_path.is_file():
+                raise FileNotFoundError(f"Prior fd file not found: {prior_path}")
+            prior_fd = np.load(prior_path)
+            if prior_fd.ndim != 2 or prior_fd.shape[1] < 2:
+                raise ValueError(f"Invalid prior fd shape {prior_fd.shape} for {prior_path}")
+            self._prior_fd_cache[stem] = prior_fd
+        else:
+            prior_fd = self._prior_fd_cache[stem]
+        if prior_fd.shape[0] != num_labels:
+            raise ValueError(
+                f"Mismatch between GT count ({num_labels}) and prior fd rows ({prior_fd.shape[0]}) for image {stem}"
+            )
+        theta_prior = torch.from_numpy(prior_fd[:, 0:1].astype(np.float32))
+        fd_norm = torch.from_numpy(prior_fd[:, 1:2].astype(np.float32))
+        return theta_prior, fd_norm
 
     @staticmethod
     def collate_fn(batch: list[dict]) -> dict:
@@ -298,7 +362,7 @@ class YOLODataset(BaseDataset):
                 value = torch.stack(value, 0)
             elif k == "visuals":
                 value = torch.nn.utils.rnn.pad_sequence(value, batch_first=True)
-            if k in {"masks", "keypoints", "bboxes", "cls", "segments", "obb"}:
+            if k in {"masks", "keypoints", "bboxes", "cls", "segments", "obb", "theta_prior", "fd_norm"}:
                 value = torch.cat(value, 0)
             new_batch[k] = value
         new_batch["batch_idx"] = list(new_batch["batch_idx"])
