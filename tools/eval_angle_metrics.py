@@ -28,8 +28,8 @@ from __future__ import annotations
 
 import argparse
 import math
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 import torch
@@ -40,7 +40,6 @@ from ultralytics.utils.ops import xyxyxyxy2xywhr
 
 def _safe_loadtxt(path: Path, expected_cols: int) -> np.ndarray:
     """Load a text file into a 2D ``np.ndarray`` with ``expected_cols`` columns."""
-
     if not path.exists():
         return np.zeros((0, expected_cols), dtype=np.float32)
 
@@ -57,7 +56,6 @@ def _safe_loadtxt(path: Path, expected_cols: int) -> np.ndarray:
 
 def load_gt_boxes(label_path: Path) -> np.ndarray:
     """Return ``[N, 6]`` arrays with ``cx, cy, w, h, theta, cls``."""
-
     arr = _safe_loadtxt(label_path, expected_cols=9)
     if arr.size == 0:
         return np.zeros((0, 6), dtype=np.float32)
@@ -71,7 +69,6 @@ def load_gt_boxes(label_path: Path) -> np.ndarray:
 
 def load_pred_boxes(pred_path: Path, conf_thres: float) -> np.ndarray:
     """Return predictions sorted by confidence (``[M, 7]``)."""
-
     arr = _safe_loadtxt(pred_path, expected_cols=7)
     if arr.size == 0:
         return np.zeros((0, 7), dtype=np.float32)
@@ -86,7 +83,6 @@ def load_pred_boxes(pred_path: Path, conf_thres: float) -> np.ndarray:
 
 def obb_iou_xywhr(box1: np.ndarray, box2: np.ndarray) -> float:
     """Compute IoU between two ``xywhr`` OBBs using probabilistic IoU."""
-
     if box1 is None or box2 is None:
         return 0.0
 
@@ -95,11 +91,8 @@ def obb_iou_xywhr(box1: np.ndarray, box2: np.ndarray) -> float:
     return float(batch_probiou(b1, b2)[0, 0])
 
 
-def match_image(
-    gt_boxes: np.ndarray, pred_boxes: np.ndarray, iou_thresh: float
-) -> list[float]:
+def match_image(gt_boxes: np.ndarray, pred_boxes: np.ndarray, iou_thresh: float) -> list[float]:
     """Return angle differences (radians) for matched prediction/GT pairs."""
-
     if len(gt_boxes) == 0 or len(pred_boxes) == 0:
         return []
 
@@ -141,7 +134,6 @@ def eval_model(
     conf_thres: float,
 ) -> tuple[int, int, list[float]]:
     """Evaluate a prediction directory and return (n_gt, n_pred, dtheta list)."""
-
     label_files = sorted(p for p in labels_dir.glob("*.txt"))
     all_dtheta: list[float] = []
     total_preds = 0
@@ -162,7 +154,6 @@ def eval_model(
 
 def summarize(pred_name: str, total_gt: int, total_preds: int, dtheta: Iterable[float]) -> None:
     """Print summary metrics for one prediction directory."""
-
     dtheta = np.array(list(dtheta), dtype=np.float32)
     print(f"=== {pred_name} ===")
     print(f"Total GT: {total_gt}, Total predictions: {total_preds}, Matched pairs: {len(dtheta)}")
