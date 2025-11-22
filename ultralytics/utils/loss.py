@@ -794,7 +794,7 @@ class v8OBBLoss(v8DetectionLoss):
             if angle_prior_loss is not None:
                 loss[0] = loss[0] + angle_prior_loss
                 self._log_angle_prior_loss_value(angle_prior_loss)
-        
+
         else:
             loss[0] += (pred_angle * 0).sum()
 
@@ -840,6 +840,7 @@ class v8OBBLoss(v8DetectionLoss):
         value = float(angle_prior_loss.detach().item())
         self.loss_angle_prior_log.append(value)
         LOGGER.info("[AnglePrior] batch loss=%.6f", value)
+
     @staticmethod
     def _scatter_gt_feature(
         values: torch.Tensor,
