@@ -130,13 +130,20 @@ def box_count_fractal_dimension(binary: np.ndarray) -> float:
 
 def compute_fd_for_patch(mask_img: np.ndarray, polygon: np.ndarray, args: argparse.Namespace) -> float:
     poly_int = np.round(polygon).astype(np.int32)
-    x, y, w, h = cv2.boundingRect(poly_int)
-    if min(w, h) < args.min_box_size:
+    img_h, img_w = mask_img.shape[:2]
+
+    # Clip polygon to the image bounds to avoid negative slices or wraparound.
+    poly_clipped = poly_int.copy()
+    poly_clipped[:, 0] = np.clip(poly_clipped[:, 0], 0, img_w - 1)
+    poly_clipped[:, 1] = np.clip(poly_clipped[:, 1], 0, img_h - 1)
+
+    x, y, w, h = cv2.boundingRect(poly_clipped)
+    if min(w, h) < args.min_box_size or w == 0 or h == 0:
         return float("nan")
 
     patch = mask_img[y : y + h, x : x + w]
-    mask = np.zeros_like(patch, dtype=np.uint8)
-    shifted = poly_int - np.array([x, y], dtype=np.int32)
+    mask = np.zeros((h, w), dtype=np.uint8)
+    shifted = np.ascontiguousarray(poly_clipped - np.array([x, y], dtype=np.int32))
     cv2.fillPoly(mask, [shifted], 255)
 
     if mask.sum() == 0:
