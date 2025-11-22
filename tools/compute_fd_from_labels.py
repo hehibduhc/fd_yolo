@@ -1,12 +1,13 @@
-"""Compute fractal dimensions for GT boxes and write augmented labels.
+"""Compute fractal dimensions and geometry stats for GT boxes and write augmented labels.
 
 This utility scans a directory of crack *mask* images and the corresponding
 YOLO-style label files, computes the fractal dimension (FD) for the crack
-region inside each ground-truth box, and writes a new label file with the FD
-appended per line. The computation is performed directly on the provided
-binary/gray masks instead of thresholding the raw RGB images, avoiding the
-additional errors introduced by image preprocessing while keeping the
-"FD–几何形态" relationship measurable.
+region inside each ground-truth box, along with the aspect ratio (AR) and
+orientation stability (local orientation variance) for the crack mask, and
+writes a new label file with all three metrics appended per line. The
+computation is performed directly on the provided binary/gray masks instead of
+thresholding the raw RGB images, avoiding the additional errors introduced by
+image preprocessing while keeping the "FD–几何形态" relationship measurable.
 
 Supported label formats
 -----------------------
@@ -31,11 +32,13 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+from skimage.morphology import skeletonize
+from sklearn.decomposition import PCA
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Compute fractal dimension for each GT box and append to labels",
+        description="Compute FD, aspect ratio, and orientation stability for each GT box and append to labels",
     )
     parser.add_argument("--masks", type=Path, required=True, help="Directory containing crack mask images")
     parser.add_argument("--labels", type=Path, required=True, help="Directory containing label txt files")
@@ -128,18 +131,49 @@ def box_count_fractal_dimension(binary: np.ndarray) -> float:
     return float(slope)
 
 
-def compute_fd_for_patch(mask_img: np.ndarray, polygon: np.ndarray, args: argparse.Namespace) -> float:
+def orientation_stability(mask: np.ndarray, sample_num: int = 200) -> float:
+    """Estimate local orientation variance on a skeletonized mask."""
+
+    sk = skeletonize(mask > 0)
+    pts = np.argwhere(sk > 0)
+    if len(pts) < 20:
+        return 0.0
+
+    idx = np.random.choice(len(pts), min(sample_num, len(pts)), replace=False)
+    thetas: list[float] = []
+
+    for i in idx:
+        y, x = pts[i]
+        # Neighborhood points within radius 5
+        win = pts[np.linalg.norm(pts - np.array([y, x]), axis=1) < 5]
+        if len(win) < 5:
+            continue
+        pca = PCA(n_components=2).fit(win)
+        v = pca.components_[0]
+        theta = math.atan2(v[1], v[0])
+        thetas.append(theta)
+
+    if len(thetas) == 0:
+        return 0.0
+
+    return float(np.var(thetas))
+
+
+def compute_geometry_for_patch(mask_img: np.ndarray, polygon: np.ndarray, args: argparse.Namespace) -> tuple[float, float, float]:
+    """Return FD, AR, theta variance for a polygon patch."""
+
     poly_int = np.round(polygon).astype(np.int32)
     img_h, img_w = mask_img.shape[:2]
 
-    # Clip polygon to the image bounds to avoid negative slices or wraparound.
     poly_clipped = poly_int.copy()
     poly_clipped[:, 0] = np.clip(poly_clipped[:, 0], 0, img_w - 1)
     poly_clipped[:, 1] = np.clip(poly_clipped[:, 1], 0, img_h - 1)
 
     x, y, w, h = cv2.boundingRect(poly_clipped)
     if min(w, h) < args.min_box_size or w == 0 or h == 0:
-        return float("nan")
+        return float("nan"), float("nan"), 0.0
+
+    ar = float(max(w, h) / min(w, h)) if min(w, h) > 0 else float("nan")
 
     patch = mask_img[y : y + h, x : x + w]
     mask = np.zeros((h, w), dtype=np.uint8)
@@ -147,14 +181,15 @@ def compute_fd_for_patch(mask_img: np.ndarray, polygon: np.ndarray, args: argpar
     cv2.fillPoly(mask, [shifted], 255)
 
     if mask.sum() == 0:
-        return float("nan")
+        return float("nan"), ar, 0.0
 
     masked = cv2.bitwise_and(patch, patch, mask=mask)
-    # If the mask image is grayscale, threshold it into a binary map first.
     _, binary = cv2.threshold(masked, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     binary = cv2.bitwise_and(binary, mask)
 
-    return box_count_fractal_dimension(binary > 0)
+    fd = box_count_fractal_dimension(binary > 0)
+    theta_var = orientation_stability(binary)
+    return fd, ar, theta_var
 
 
 # IO pipeline --------------------------------------------------------------------------------------
@@ -183,8 +218,8 @@ def process_single_image(mask_path: Path, label_path: Path, args: argparse.Names
     for line in load_labels(label_path):
         cls, coords = parse_label_numbers(line)
         polygon = polygon_from_label(coords, w, h, theta_in_deg=args.theta_in_deg)
-        fd = compute_fd_for_patch(mask_img, polygon, args)
-        out_lines.append(f"{line} {fd:.6f}")
+        fd, ar, theta_var = compute_geometry_for_patch(mask_img, polygon, args)
+        out_lines.append(f"{line} {fd:.6f} {ar:.6f} {theta_var:.6f}")
 
     return out_lines
 
