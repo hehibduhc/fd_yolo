@@ -17,13 +17,14 @@ Supported label formats
   default. Set ``--theta-in-deg`` if the angle is stored in degrees.
 - Axis-aligned box: ``cls cx cy w h`` (theta assumed to be 0).
 
-Example
+Example:
 -------
 python tools/compute_fd_from_labels.py \
     --masks path/to/masks \
     --labels path/to/labels \
     --output path/to/output_labels
 """
+
 from __future__ import annotations
 
 import argparse
@@ -58,6 +59,7 @@ def parse_args() -> argparse.Namespace:
 
 
 # Geometry helpers ---------------------------------------------------------------------------------
+
 
 def _maybe_denormalize(points: np.ndarray, width: int, height: int) -> np.ndarray:
     pts = np.asarray(points, dtype=np.float32)
@@ -97,6 +99,7 @@ def polygon_from_label(values: np.ndarray, img_w: int, img_h: int, theta_in_deg:
 
 # Fractal dimension helpers ------------------------------------------------------------------------
 
+
 def box_count_fractal_dimension(binary: np.ndarray) -> float:
     foreground = binary.astype(bool)
     if not foreground.any():
@@ -109,8 +112,8 @@ def box_count_fractal_dimension(binary: np.ndarray) -> float:
 
     for exp in range(1, max_scale + 1):
         box = 2**exp
-        tiles_y = int(math.ceil(h / box))
-        tiles_x = int(math.ceil(w / box))
+        tiles_y = math.ceil(h / box)
+        tiles_x = math.ceil(w / box)
         count = 0
         for ty in range(tiles_y):
             y0, y1 = ty * box, min((ty + 1) * box, h)
@@ -133,7 +136,6 @@ def box_count_fractal_dimension(binary: np.ndarray) -> float:
 
 def orientation_stability(mask: np.ndarray, sample_num: int = 200) -> float:
     """Estimate local orientation variance on a skeletonized mask."""
-
     sk = skeletonize(mask > 0)
     pts = np.argwhere(sk > 0)
     if len(pts) < 20:
@@ -159,9 +161,10 @@ def orientation_stability(mask: np.ndarray, sample_num: int = 200) -> float:
     return float(np.var(thetas))
 
 
-def compute_geometry_for_patch(mask_img: np.ndarray, polygon: np.ndarray, args: argparse.Namespace) -> tuple[float, float, float]:
+def compute_geometry_for_patch(
+    mask_img: np.ndarray, polygon: np.ndarray, args: argparse.Namespace
+) -> tuple[float, float, float]:
     """Return FD, AR, theta variance for a polygon patch."""
-
     poly_int = np.round(polygon).astype(np.int32)
     img_h, img_w = mask_img.shape[:2]
 
@@ -194,6 +197,7 @@ def compute_geometry_for_patch(mask_img: np.ndarray, polygon: np.ndarray, args: 
 
 # IO pipeline --------------------------------------------------------------------------------------
 
+
 def load_labels(label_path: Path) -> list[str]:
     text = label_path.read_text().strip().splitlines()
     return [line.strip() for line in text if line.strip()]
@@ -216,7 +220,7 @@ def process_single_image(mask_path: Path, label_path: Path, args: argparse.Names
     out_lines: list[str] = []
 
     for line in load_labels(label_path):
-        cls, coords = parse_label_numbers(line)
+        _cls, coords = parse_label_numbers(line)
         polygon = polygon_from_label(coords, w, h, theta_in_deg=args.theta_in_deg)
         fd, ar, theta_var = compute_geometry_for_patch(mask_img, polygon, args)
         out_lines.append(f"{line} {fd:.6f} {ar:.6f} {theta_var:.6f}")
@@ -225,6 +229,7 @@ def process_single_image(mask_path: Path, label_path: Path, args: argparse.Names
 
 
 # Entrypoint ---------------------------------------------------------------------------------------
+
 
 def main() -> None:
     args = parse_args()
