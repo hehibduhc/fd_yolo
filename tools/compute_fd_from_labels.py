@@ -1,10 +1,12 @@
 """Compute fractal dimensions for GT boxes and write augmented labels.
 
-This utility scans a directory of images and the corresponding YOLO-style
-label files, computes the fractal dimension (FD) for the crack region inside
-each ground-truth box, and writes a new label file with the FD appended per
-line. It is intended to make the "FD–几何形态" relationship measurable by
-adding per-box FD statistics to the annotations.
+This utility scans a directory of crack *mask* images and the corresponding
+YOLO-style label files, computes the fractal dimension (FD) for the crack
+region inside each ground-truth box, and writes a new label file with the FD
+appended per line. The computation is performed directly on the provided
+binary/gray masks instead of thresholding the raw RGB images, avoiding the
+additional errors introduced by image preprocessing while keeping the
+"FD–几何形态" relationship measurable.
 
 Supported label formats
 -----------------------
@@ -17,7 +19,7 @@ Supported label formats
 Example
 -------
 python tools/compute_fd_from_labels.py \
-    --images path/to/images \
+    --masks path/to/masks \
     --labels path/to/labels \
     --output path/to/output_labels
 """
@@ -35,19 +37,13 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Compute fractal dimension for each GT box and append to labels",
     )
-    parser.add_argument("--images", type=Path, required=True, help="Directory containing input images")
+    parser.add_argument("--masks", type=Path, required=True, help="Directory containing crack mask images")
     parser.add_argument("--labels", type=Path, required=True, help="Directory containing label txt files")
     parser.add_argument("--output", type=Path, required=True, help="Directory to write augmented labels")
     parser.add_argument(
         "--theta-in-deg",
         action="store_true",
         help="Set if rotated-box theta values are stored in degrees instead of radians",
-    )
-    parser.add_argument(
-        "--edge-low",
-        type=float,
-        default=75.0,
-        help="Lower hysteresis threshold for Canny edge detection (high is 3x)",
     )
     parser.add_argument(
         "--min-box-size",
@@ -132,13 +128,13 @@ def box_count_fractal_dimension(binary: np.ndarray) -> float:
     return float(slope)
 
 
-def compute_fd_for_patch(gray: np.ndarray, polygon: np.ndarray, args: argparse.Namespace) -> float:
+def compute_fd_for_patch(mask_img: np.ndarray, polygon: np.ndarray, args: argparse.Namespace) -> float:
     poly_int = np.round(polygon).astype(np.int32)
     x, y, w, h = cv2.boundingRect(poly_int)
     if min(w, h) < args.min_box_size:
         return float("nan")
 
-    patch = gray[y : y + h, x : x + w]
+    patch = mask_img[y : y + h, x : x + w]
     mask = np.zeros_like(patch, dtype=np.uint8)
     shifted = poly_int - np.array([x, y], dtype=np.int32)
     cv2.fillPoly(mask, [shifted], 255)
@@ -147,12 +143,11 @@ def compute_fd_for_patch(gray: np.ndarray, polygon: np.ndarray, args: argparse.N
         return float("nan")
 
     masked = cv2.bitwise_and(patch, patch, mask=mask)
+    # If the mask image is grayscale, threshold it into a binary map first.
     _, binary = cv2.threshold(masked, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     binary = cv2.bitwise_and(binary, mask)
 
-    high = args.edge_low * 3.0
-    edges = cv2.Canny(binary, args.edge_low, high)
-    return box_count_fractal_dimension(edges > 0)
+    return box_count_fractal_dimension(binary > 0)
 
 
 # IO pipeline --------------------------------------------------------------------------------------
@@ -170,18 +165,18 @@ def parse_label_numbers(line: str) -> tuple[str, np.ndarray]:
     return cls, coords
 
 
-def process_single_image(img_path: Path, label_path: Path, args: argparse.Namespace) -> list[str]:
-    image = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
-    if image is None:
-        raise FileNotFoundError(f"Failed to read image: {img_path}")
+def process_single_image(mask_path: Path, label_path: Path, args: argparse.Namespace) -> list[str]:
+    mask_img = cv2.imread(str(mask_path), cv2.IMREAD_GRAYSCALE)
+    if mask_img is None:
+        raise FileNotFoundError(f"Failed to read mask image: {mask_path}")
 
-    h, w = image.shape[:2]
+    h, w = mask_img.shape[:2]
     out_lines: list[str] = []
 
     for line in load_labels(label_path):
         cls, coords = parse_label_numbers(line)
         polygon = polygon_from_label(coords, w, h, theta_in_deg=args.theta_in_deg)
-        fd = compute_fd_for_patch(image, polygon, args)
+        fd = compute_fd_for_patch(mask_img, polygon, args)
         out_lines.append(f"{line} {fd:.6f}")
 
     return out_lines
@@ -199,12 +194,12 @@ def main() -> None:
 
     for label_path in label_files:
         stem = label_path.stem
-        img_candidates = list(Path(args.images).glob(f"{stem}.*"))
-        if not img_candidates:
-            raise FileNotFoundError(f"No image found for label {label_path}")
+        mask_candidates = list(Path(args.masks).glob(f"{stem}.*"))
+        if not mask_candidates:
+            raise FileNotFoundError(f"No mask image found for label {label_path}")
 
-        img_path = img_candidates[0]
-        out_lines = process_single_image(img_path, label_path, args)
+        mask_path = mask_candidates[0]
+        out_lines = process_single_image(mask_path, label_path, args)
         out_path = args.output / label_path.name
         out_path.write_text("\n".join(out_lines) + "\n")
         print(f"Processed {label_path.name}: {len(out_lines)} boxes")
