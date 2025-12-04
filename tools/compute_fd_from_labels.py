@@ -16,6 +16,8 @@ Supported label formats
 - Rotated box: ``cls cx cy w h theta`` where ``theta`` is in radians by
   default. Set ``--theta-in-deg`` if the angle is stored in degrees.
 - Axis-aligned box: ``cls cx cy w h`` (theta assumed to be 0).
+- VOC-style XML ``robndbox`` entries are also accepted and will be
+  converted to ``cls cx cy w h angle`` automatically.
 
 Example:
 -------
@@ -29,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import cv2
@@ -42,7 +45,12 @@ def parse_args() -> argparse.Namespace:
         description="Compute FD, aspect ratio, and orientation stability for each GT box and append to labels",
     )
     parser.add_argument("--masks", type=Path, required=True, help="Directory containing crack mask images")
-    parser.add_argument("--labels", type=Path, required=True, help="Directory containing label txt files")
+    parser.add_argument(
+        "--labels",
+        type=Path,
+        required=True,
+        help="Directory containing label files (.txt YOLO or .xml robndbox)",
+    )
     parser.add_argument("--output", type=Path, required=True, help="Directory to write augmented labels")
     parser.add_argument(
         "--theta-in-deg",
@@ -53,7 +61,13 @@ def parse_args() -> argparse.Namespace:
         "--min-box-size",
         type=int,
         default=12,
-        help="Skip FD calculation for boxes whose shorter side is below this pixel threshold",
+        help="Skip calculation when the shorter side of the GT box is below this pixel threshold",
+    )
+    parser.add_argument(
+        "--patch-size",
+        type=int,
+        default=256,
+        help="Square output size for normalized patches (after rotation alignment)",
     )
     return parser.parse_args()
 
@@ -161,10 +175,50 @@ def orientation_stability(mask: np.ndarray, sample_num: int = 200) -> float:
     return float(np.var(thetas))
 
 
+def principal_orientation(mask: np.ndarray) -> float:
+    """Return the dominant orientation (radians) via PCA on the foreground pixels."""
+    pts = np.argwhere(mask > 0)
+    if len(pts) < 5:
+        return 0.0
+
+    pca = PCA(n_components=2).fit(pts)
+    v = pca.components_[0]
+    return math.atan2(v[0], v[1])
+
+
+def rotate_and_normalize_patch(binary: np.ndarray, angle_rad: float, patch_size: int) -> np.ndarray:
+    """Rotate to horizontal by -angle_rad and resize to a square canvas preserving AR."""
+    h, w = binary.shape[:2]
+    center = (w / 2.0, h / 2.0)
+    angle_deg = -math.degrees(angle_rad)
+    rot_mat = cv2.getRotationMatrix2D(center, angle_deg, 1.0)
+    rotated = cv2.warpAffine(binary, rot_mat, (w, h), flags=cv2.INTER_NEAREST, borderValue=0)
+
+    coords = np.argwhere(rotated > 0)
+    if len(coords) == 0:
+        return np.zeros((patch_size, patch_size), dtype=np.uint8)
+
+    y_min, x_min = coords.min(axis=0)
+    y_max, x_max = coords.max(axis=0)
+    crop = rotated[y_min : y_max + 1, x_min : x_max + 1]
+
+    crop_h, crop_w = crop.shape[:2]
+    scale = patch_size / float(max(crop_h, crop_w))
+    new_w = max(1, round(crop_w * scale))
+    new_h = max(1, round(crop_h * scale))
+    resized = cv2.resize(crop, (new_w, new_h), interpolation=cv2.INTER_NEAREST)
+
+    canvas = np.zeros((patch_size, patch_size), dtype=np.uint8)
+    y_off = (patch_size - new_h) // 2
+    x_off = (patch_size - new_w) // 2
+    canvas[y_off : y_off + new_h, x_off : x_off + new_w] = resized
+    return canvas
+
+
 def compute_geometry_for_patch(
     mask_img: np.ndarray, polygon: np.ndarray, args: argparse.Namespace
 ) -> tuple[float, float, float]:
-    """Return FD, AR, theta variance for a polygon patch."""
+    """Return FD, AR, theta variance for a polygon patch with rotation + size normalization."""
     poly_int = np.round(polygon).astype(np.int32)
     img_h, img_w = mask_img.shape[:2]
 
@@ -176,31 +230,77 @@ def compute_geometry_for_patch(
     if min(w, h) < args.min_box_size or w == 0 or h == 0:
         return float("nan"), float("nan"), 0.0
 
-    ar = float(max(w, h) / min(w, h)) if min(w, h) > 0 else float("nan")
-
+    # Build a binary mask for the cropped patch
     patch = mask_img[y : y + h, x : x + w]
     mask = np.zeros((h, w), dtype=np.uint8)
     shifted = np.ascontiguousarray(poly_clipped - np.array([x, y], dtype=np.int32))
     cv2.fillPoly(mask, [shifted], 255)
 
     if mask.sum() == 0:
-        return float("nan"), ar, 0.0
+        return float("nan"), float("nan"), 0.0
 
     masked = cv2.bitwise_and(patch, patch, mask=mask)
     _, binary = cv2.threshold(masked, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     binary = cv2.bitwise_and(binary, mask)
 
-    fd = box_count_fractal_dimension(binary > 0)
-    theta_var = orientation_stability(binary)
+    theta_main = principal_orientation(binary)
+    norm_patch = rotate_and_normalize_patch(binary, theta_main, args.patch_size)
+
+    coords = np.argwhere(norm_patch > 0)
+    if len(coords) == 0:
+        return float("nan"), float("nan"), 0.0
+
+    y_min, x_min = coords.min(axis=0)
+    y_max, x_max = coords.max(axis=0)
+    bbox_w = x_max - x_min + 1
+    bbox_h = y_max - y_min + 1
+    ar = float(max(bbox_w, bbox_h) / min(bbox_w, bbox_h)) if min(bbox_w, bbox_h) > 0 else float("nan")
+
+    fd = box_count_fractal_dimension(norm_patch > 0)
+    theta_var = orientation_stability(norm_patch)
     return fd, ar, theta_var
 
 
 # IO pipeline --------------------------------------------------------------------------------------
 
 
-def load_labels(label_path: Path) -> list[str]:
+def _load_txt_labels(label_path: Path) -> list[str]:
     text = label_path.read_text().strip().splitlines()
     return [line.strip() for line in text if line.strip()]
+
+
+def _load_xml_labels(label_path: Path) -> list[str]:
+    """Parse robndbox annotations from a VOC-style XML file."""
+    tree = ET.parse(label_path)
+    root = tree.getroot()
+
+    entries: list[str] = []
+    for obj in root.findall("object"):
+        name = obj.findtext("name", default="0").strip()
+        rbox = obj.find("robndbox")
+        if rbox is None:
+            continue
+
+        cx = rbox.findtext("cx")
+        cy = rbox.findtext("cy")
+        w = rbox.findtext("w")
+        h = rbox.findtext("h")
+        angle = rbox.findtext("angle")
+        if None in {cx, cy, w, h}:
+            continue
+
+        parts = [name, cx, cy, w, h]
+        if angle is not None:
+            parts.append(angle)
+        entries.append(" ".join(parts))
+
+    return entries
+
+
+def load_labels(label_path: Path) -> list[str]:
+    if label_path.suffix.lower() == ".xml":
+        return _load_xml_labels(label_path)
+    return _load_txt_labels(label_path)
 
 
 def parse_label_numbers(line: str) -> tuple[str, np.ndarray]:
@@ -235,7 +335,7 @@ def main() -> None:
     args = parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
 
-    label_files = sorted(Path(args.labels).glob("*.txt"))
+    label_files = sorted([p for p in Path(args.labels).iterdir() if p.suffix.lower() in {".txt", ".xml"}])
     if not label_files:
         raise FileNotFoundError(f"No label files found in {args.labels}")
 
@@ -247,7 +347,8 @@ def main() -> None:
 
         mask_path = mask_candidates[0]
         out_lines = process_single_image(mask_path, label_path, args)
-        out_path = args.output / label_path.name
+        out_name = f"{label_path.stem}.txt"
+        out_path = args.output / out_name
         out_path.write_text("\n".join(out_lines) + "\n")
         print(f"Processed {label_path.name}: {len(out_lines)} boxes")
 
