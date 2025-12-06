@@ -19,20 +19,19 @@ Supported label formats
 - VOC-style XML ``robndbox`` entries are also accepted and will be
   converted to ``cls cx cy w h angle`` automatically.
 
-Example:
+Example
 -------
 python tools/compute_fd_from_labels.py \
     --masks path/to/masks \
     --labels path/to/labels \
     --output path/to/output_labels
 """
-
 from __future__ import annotations
 
 import argparse
 import math
-import xml.etree.ElementTree as ET
 from pathlib import Path
+import xml.etree.ElementTree as ET
 
 import cv2
 import numpy as np
@@ -74,7 +73,6 @@ def parse_args() -> argparse.Namespace:
 
 # Geometry helpers ---------------------------------------------------------------------------------
 
-
 def _maybe_denormalize(points: np.ndarray, width: int, height: int) -> np.ndarray:
     pts = np.asarray(points, dtype=np.float32)
     if pts.max() <= 1.5:  # Heuristic: coordinates are normalized to [0,1]
@@ -113,7 +111,6 @@ def polygon_from_label(values: np.ndarray, img_w: int, img_h: int, theta_in_deg:
 
 # Fractal dimension helpers ------------------------------------------------------------------------
 
-
 def box_count_fractal_dimension(binary: np.ndarray) -> float:
     foreground = binary.astype(bool)
     if not foreground.any():
@@ -126,8 +123,8 @@ def box_count_fractal_dimension(binary: np.ndarray) -> float:
 
     for exp in range(1, max_scale + 1):
         box = 2**exp
-        tiles_y = math.ceil(h / box)
-        tiles_x = math.ceil(w / box)
+        tiles_y = int(math.ceil(h / box))
+        tiles_x = int(math.ceil(w / box))
         count = 0
         for ty in range(tiles_y):
             y0, y1 = ty * box, min((ty + 1) * box, h)
@@ -148,46 +145,74 @@ def box_count_fractal_dimension(binary: np.ndarray) -> float:
     return float(slope)
 
 
-def orientation_stability(mask: np.ndarray, sample_num: int = 200) -> float:
-    """Estimate local orientation variance on a skeletonized mask."""
+def _wrap_to_pi(angle: np.ndarray | float) -> np.ndarray | float:
+    return (angle + math.pi) % (2 * math.pi) - math.pi
+
+
+def orientation_stability(mask: np.ndarray, sample_num: int = 200, radius: float = 5.0) -> float:
+    """Estimate weighted local orientation variance after global orientation removal."""
+
     sk = skeletonize(mask > 0)
     pts = np.argwhere(sk > 0)
     if len(pts) < 20:
         return 0.0
 
+    # Remove the dominant direction so theta_var only reflects bending/branching
+    main_theta = principal_orientation(mask)
+
     idx = np.random.choice(len(pts), min(sample_num, len(pts)), replace=False)
-    thetas: list[float] = []
+    angle_diffs: list[float] = []
+    weights: list[float] = []
 
     for i in idx:
         y, x = pts[i]
-        # Neighborhood points within radius 5
-        win = pts[np.linalg.norm(pts - np.array([y, x]), axis=1) < 5]
+        dists = np.linalg.norm(pts - np.array([y, x]), axis=1)
+        win = pts[dists < radius]
         if len(win) < 5:
             continue
-        pca = PCA(n_components=2).fit(win)
-        v = pca.components_[0]
-        theta = math.atan2(v[1], v[0])
-        thetas.append(theta)
 
-    if len(thetas) == 0:
+        # Use neighborhood density as weight to downweight endpoints/isolated tips
+        weight = float(len(win))
+        centered = win - win.mean(axis=0, keepdims=True)
+        pca = PCA(n_components=2).fit(centered)
+        v = pca.components_[0]
+        theta = math.atan2(v[0], v[1])
+        angle_diff = _wrap_to_pi(theta - main_theta)
+
+        angle_diffs.append(angle_diff)
+        weights.append(weight)
+
+    if len(angle_diffs) == 0 or sum(weights) == 0:
         return 0.0
 
-    return float(np.var(thetas))
+    # Weighted circular variance
+    weights_np = np.array(weights, dtype=np.float32)
+    diffs_np = np.array(angle_diffs, dtype=np.float32)
+    mean_sin = np.sum(weights_np * np.sin(diffs_np)) / weights_np.sum()
+    mean_cos = np.sum(weights_np * np.cos(diffs_np)) / weights_np.sum()
+    mean_angle = math.atan2(mean_sin, mean_cos)
+    centered_diffs = _wrap_to_pi(diffs_np - mean_angle)
+    variance = float(np.sum(weights_np * centered_diffs**2) / weights_np.sum())
+    return variance
 
 
 def principal_orientation(mask: np.ndarray) -> float:
-    """Return the dominant orientation (radians) via PCA on the foreground pixels."""
-    pts = np.argwhere(mask > 0)
+    """Return the dominant orientation (radians) via PCA on the skeleton foreground."""
+
+    sk = skeletonize(mask > 0)
+    pts = np.argwhere(sk > 0)
     if len(pts) < 5:
         return 0.0
 
-    pca = PCA(n_components=2).fit(pts)
+    centered = pts - pts.mean(axis=0, keepdims=True)
+    pca = PCA(n_components=2).fit(centered)
     v = pca.components_[0]
     return math.atan2(v[0], v[1])
 
 
 def rotate_and_normalize_patch(binary: np.ndarray, angle_rad: float, patch_size: int) -> np.ndarray:
     """Rotate to horizontal by -angle_rad and resize to a square canvas preserving AR."""
+
     h, w = binary.shape[:2]
     center = (w / 2.0, h / 2.0)
     angle_deg = -math.degrees(angle_rad)
@@ -204,8 +229,8 @@ def rotate_and_normalize_patch(binary: np.ndarray, angle_rad: float, patch_size:
 
     crop_h, crop_w = crop.shape[:2]
     scale = patch_size / float(max(crop_h, crop_w))
-    new_w = max(1, round(crop_w * scale))
-    new_h = max(1, round(crop_h * scale))
+    new_w = max(1, int(round(crop_w * scale)))
+    new_h = max(1, int(round(crop_h * scale)))
     resized = cv2.resize(crop, (new_w, new_h), interpolation=cv2.INTER_NEAREST)
 
     canvas = np.zeros((patch_size, patch_size), dtype=np.uint8)
@@ -215,10 +240,9 @@ def rotate_and_normalize_patch(binary: np.ndarray, angle_rad: float, patch_size:
     return canvas
 
 
-def compute_geometry_for_patch(
-    mask_img: np.ndarray, polygon: np.ndarray, args: argparse.Namespace
-) -> tuple[float, float, float]:
+def compute_geometry_for_patch(mask_img: np.ndarray, polygon: np.ndarray, args: argparse.Namespace) -> tuple[float, float, float]:
     """Return FD, AR, theta variance for a polygon patch with rotation + size normalization."""
+
     poly_int = np.round(polygon).astype(np.int32)
     img_h, img_w = mask_img.shape[:2]
 
@@ -263,7 +287,6 @@ def compute_geometry_for_patch(
 
 # IO pipeline --------------------------------------------------------------------------------------
 
-
 def _load_txt_labels(label_path: Path) -> list[str]:
     text = label_path.read_text().strip().splitlines()
     return [line.strip() for line in text if line.strip()]
@@ -271,6 +294,7 @@ def _load_txt_labels(label_path: Path) -> list[str]:
 
 def _load_xml_labels(label_path: Path) -> list[str]:
     """Parse robndbox annotations from a VOC-style XML file."""
+
     tree = ET.parse(label_path)
     root = tree.getroot()
 
@@ -320,7 +344,7 @@ def process_single_image(mask_path: Path, label_path: Path, args: argparse.Names
     out_lines: list[str] = []
 
     for line in load_labels(label_path):
-        _cls, coords = parse_label_numbers(line)
+        cls, coords = parse_label_numbers(line)
         polygon = polygon_from_label(coords, w, h, theta_in_deg=args.theta_in_deg)
         fd, ar, theta_var = compute_geometry_for_patch(mask_img, polygon, args)
         out_lines.append(f"{line} {fd:.6f} {ar:.6f} {theta_var:.6f}")
@@ -329,7 +353,6 @@ def process_single_image(mask_path: Path, label_path: Path, args: argparse.Names
 
 
 # Entrypoint ---------------------------------------------------------------------------------------
-
 
 def main() -> None:
     args = parse_args()
