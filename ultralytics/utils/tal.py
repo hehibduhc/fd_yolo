@@ -1,4 +1,5 @@
 # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+from __future__ import annotations
 
 import torch
 import torch.nn as nn
@@ -7,6 +8,12 @@ from . import LOGGER
 from .metrics import bbox_iou, probiou
 from .ops import xywhr2xyxyxyxy
 from .torch_utils import TORCH_1_11
+
+DEFAULT_FD_GROUP_RULES = {
+    "L": {"ar_min": 3.0, "ar_max": 10.0},
+    "M": {"ar_min": 2.0, "ar_max": 10.0},
+    "H": {"ar_min": 1.0, "ar_max": 4.0},
+}
 
 
 class TaskAlignedAssigner(nn.Module):
@@ -23,7 +30,20 @@ class TaskAlignedAssigner(nn.Module):
         eps (float): A small value to prevent division by zero.
     """
 
-    def __init__(self, topk: int = 13, num_classes: int = 80, alpha: float = 1.0, beta: float = 6.0, eps: float = 1e-9):
+    def __init__(
+        self,
+        topk: int = 13,
+        num_classes: int = 80,
+        alpha: float = 1.0,
+        beta: float = 6.0,
+        eps: float = 1e-9,
+        fd_group_rules: dict | None = None,
+        fd_thresholds: tuple[float, float] = (1.45, 1.61),
+        fd_cost_weights: tuple[float, float, float, float] = (1.0, 0.5, 0.2, 1.0),
+        fd_penalty: float = 3.0,
+        fd_use_hard_gating: bool = False,
+        fd_debug: bool = False,
+    ):
         """Initialize a TaskAlignedAssigner object with customizable hyperparameters.
 
         Args:
@@ -39,9 +59,15 @@ class TaskAlignedAssigner(nn.Module):
         self.alpha = alpha
         self.beta = beta
         self.eps = eps
+        self.fd_group_rules = fd_group_rules or DEFAULT_FD_GROUP_RULES
+        self.fd_thresholds = fd_thresholds
+        self.fd_cost_weights = tuple(fd_cost_weights)
+        self.fd_penalty = fd_penalty
+        self.fd_use_hard_gating = fd_use_hard_gating
+        self.fd_debug = fd_debug
 
     @torch.no_grad()
-    def forward(self, pd_scores, pd_bboxes, anc_points, gt_labels, gt_bboxes, mask_gt):
+    def forward(self, pd_scores, pd_bboxes, anc_points, gt_labels, gt_bboxes, mask_gt, gt_fd=None):
         """Compute the task-aligned assignment.
 
         Args:
@@ -76,15 +102,16 @@ class TaskAlignedAssigner(nn.Module):
             )
 
         try:
-            return self._forward(pd_scores, pd_bboxes, anc_points, gt_labels, gt_bboxes, mask_gt)
+            return self._forward(pd_scores, pd_bboxes, anc_points, gt_labels, gt_bboxes, mask_gt, gt_fd=gt_fd)
         except torch.cuda.OutOfMemoryError:
             # Move tensors to CPU, compute, then move back to original device
             LOGGER.warning("CUDA OutOfMemoryError in TaskAlignedAssigner, using CPU")
             cpu_tensors = [t.cpu() for t in (pd_scores, pd_bboxes, anc_points, gt_labels, gt_bboxes, mask_gt)]
-            result = self._forward(*cpu_tensors)
+            gt_fd_cpu = gt_fd.cpu() if gt_fd is not None else None
+            result = self._forward(*cpu_tensors, gt_fd=gt_fd_cpu)
             return tuple(t.to(device) for t in result)
 
-    def _forward(self, pd_scores, pd_bboxes, anc_points, gt_labels, gt_bboxes, mask_gt):
+    def _forward(self, pd_scores, pd_bboxes, anc_points, gt_labels, gt_bboxes, mask_gt, gt_fd=None):
         """Compute the task-aligned assignment.
 
         Args:
@@ -103,7 +130,7 @@ class TaskAlignedAssigner(nn.Module):
             target_gt_idx (torch.Tensor): Target ground truth indices with shape (bs, num_total_anchors).
         """
         mask_pos, align_metric, overlaps = self.get_pos_mask(
-            pd_scores, pd_bboxes, gt_labels, gt_bboxes, anc_points, mask_gt
+            pd_scores, pd_bboxes, gt_labels, gt_bboxes, anc_points, mask_gt, gt_fd=gt_fd
         )
 
         target_gt_idx, fg_mask, mask_pos = self.select_highest_overlaps(mask_pos, overlaps, self.n_max_boxes)
@@ -120,7 +147,7 @@ class TaskAlignedAssigner(nn.Module):
 
         return target_labels, target_bboxes, target_scores, fg_mask.bool(), target_gt_idx
 
-    def get_pos_mask(self, pd_scores, pd_bboxes, gt_labels, gt_bboxes, anc_points, mask_gt):
+    def get_pos_mask(self, pd_scores, pd_bboxes, gt_labels, gt_bboxes, anc_points, mask_gt, gt_fd=None):
         """Get positive mask for each ground truth box.
 
         Args:
@@ -138,7 +165,9 @@ class TaskAlignedAssigner(nn.Module):
         """
         mask_in_gts = self.select_candidates_in_gts(anc_points, gt_bboxes)
         # Get anchor_align metric, (b, max_num_obj, h*w)
-        align_metric, overlaps = self.get_box_metrics(pd_scores, pd_bboxes, gt_labels, gt_bboxes, mask_in_gts * mask_gt)
+        align_metric, overlaps = self.get_box_metrics(
+            pd_scores, pd_bboxes, gt_labels, gt_bboxes, mask_in_gts * mask_gt, gt_fd=gt_fd
+        )
         # Get topk_metric mask, (b, max_num_obj, h*w)
         mask_topk = self.select_topk_candidates(align_metric, topk_mask=mask_gt.expand(-1, -1, self.topk).bool())
         # Merge all mask to a final mask, (b, max_num_obj, h*w)
@@ -146,7 +175,7 @@ class TaskAlignedAssigner(nn.Module):
 
         return mask_pos, align_metric, overlaps
 
-    def get_box_metrics(self, pd_scores, pd_bboxes, gt_labels, gt_bboxes, mask_gt):
+    def get_box_metrics(self, pd_scores, pd_bboxes, gt_labels, gt_bboxes, mask_gt, gt_fd=None):
         """Compute alignment metric given predicted and ground truth bounding boxes.
 
         Args:
@@ -318,6 +347,129 @@ class TaskAlignedAssigner(nn.Module):
 class RotatedTaskAlignedAssigner(TaskAlignedAssigner):
     """Assigns ground-truth objects to rotated bounding boxes using a task-aligned metric."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._cached_fd_bounds = None
+
+    def get_box_metrics(self, pd_scores, pd_bboxes, gt_labels, gt_bboxes, mask_gt, gt_fd=None):
+        """Compute alignment metrics with FD-aware geometric costs for rotated boxes."""
+        if gt_fd is None or not torch.isfinite(gt_fd).any():
+            return super().get_box_metrics(pd_scores, pd_bboxes, gt_labels, gt_bboxes, mask_gt, gt_fd=gt_fd)
+
+        na = pd_bboxes.shape[-2]
+        mask_gt = mask_gt.bool()
+        overlaps = torch.zeros([self.bs, self.n_max_boxes, na], dtype=pd_bboxes.dtype, device=pd_bboxes.device)
+        bbox_scores = torch.zeros([self.bs, self.n_max_boxes, na], dtype=pd_scores.dtype, device=pd_scores.device)
+
+        ind = torch.zeros([2, self.bs, self.n_max_boxes], dtype=torch.long)
+        ind[0] = torch.arange(end=self.bs).view(-1, 1).expand(-1, self.n_max_boxes)
+        ind[1] = gt_labels.squeeze(-1)
+        bbox_scores[mask_gt] = pd_scores[ind[0], :, ind[1]][mask_gt]
+
+        pd_boxes = pd_bboxes.unsqueeze(1).expand(-1, self.n_max_boxes, -1, -1)[mask_gt]
+        gt_boxes = gt_bboxes.unsqueeze(2).expand(-1, -1, na, -1)[mask_gt]
+        gt_fd_vals = gt_fd.unsqueeze(2).expand(-1, -1, na, -1)[mask_gt]
+        overlaps[mask_gt] = self.iou_calculation(gt_boxes, pd_boxes)
+
+        composite_cost, fd_filter_mask = self._fd_composite_cost(gt_boxes, pd_boxes, gt_fd_vals)
+
+        w1, w2, w3, w4 = self.fd_cost_weights
+        cost = (
+            w1 * (1.0 - overlaps[mask_gt])
+            + w2 * composite_cost["ar"]
+            + w3 * composite_cost["theta"]
+            + w4 * composite_cost["fd"]
+        )
+        metric = bbox_scores[mask_gt].pow(self.alpha) * (1.0 / (1.0 + cost)).pow(self.beta)
+        align_metric = torch.zeros_like(overlaps)
+        align_metric[mask_gt] = metric
+
+        if self.fd_debug:
+            self._log_fd_debug(mask_gt, fd_filter_mask, composite_cost)
+
+        return align_metric, overlaps
+
+    def _fd_composite_cost(self, gt_boxes: torch.Tensor, pd_boxes: torch.Tensor, gt_fd_vals: torch.Tensor):
+        """Return AR and angle costs along with FD mismatch penalties for flattened candidate pairs."""
+        eps = self.eps
+        gt_wh = torch.clamp(gt_boxes[..., 2:4], min=eps)
+        pd_wh = torch.clamp(pd_boxes[..., 2:4], min=eps)
+
+        ar_gt = torch.maximum(gt_wh[..., 0], gt_wh[..., 1]) / torch.minimum(gt_wh[..., 0], gt_wh[..., 1])
+        ar_pd = torch.maximum(pd_wh[..., 0], pd_wh[..., 1]) / torch.minimum(pd_wh[..., 0], pd_wh[..., 1])
+        ar_cost = torch.abs(torch.log(ar_pd / ar_gt))
+
+        theta_gt = gt_boxes[..., 4]
+        theta_pd = pd_boxes[..., 4]
+        dtheta = torch.atan2(torch.sin(theta_pd - theta_gt), torch.cos(theta_pd - theta_gt))
+        theta_cost = 1.0 - torch.cos(dtheta)
+
+        fd_valid = torch.isfinite(gt_fd_vals.squeeze(-1))
+        fd_groups = self._map_fd_to_group(gt_fd_vals.squeeze(-1))
+        fd_bounds = self._get_fd_bounds(gt_boxes.device, gt_boxes.dtype)
+        bounds = fd_bounds[fd_groups]
+        bounds = torch.where(
+            fd_valid.unsqueeze(-1),
+            bounds,
+            torch.tensor([[-torch.inf, torch.inf]], device=bounds.device, dtype=bounds.dtype),
+        )
+        outside = (ar_pd < bounds[..., 0]) | (ar_pd > bounds[..., 1])
+
+        fd_filter_mask = outside & fd_valid
+        if self.fd_use_hard_gating:
+            fd_cost = torch.where(fd_filter_mask, torch.full_like(ar_cost, float("inf")), torch.zeros_like(ar_cost))
+        else:
+            fd_cost = torch.where(fd_filter_mask, torch.full_like(ar_cost, self.fd_penalty), torch.zeros_like(ar_cost))
+
+        return {"ar": ar_cost, "theta": theta_cost, "fd": fd_cost}, fd_filter_mask
+
+    def _map_fd_to_group(self, fd_vals: torch.Tensor) -> torch.Tensor:
+        """Map fractal dimension scalar to FD group index (0=L,1=M,2=H)."""
+        th1, th2 = self.fd_thresholds
+        group_idx = torch.zeros_like(fd_vals, dtype=torch.long)
+        group_idx = torch.where(fd_vals >= th1, torch.ones_like(group_idx), group_idx)
+        group_idx = torch.where(fd_vals >= th2, torch.full_like(group_idx, 2), group_idx)
+        return group_idx.clamp(min=0, max=2)
+
+    def _get_fd_bounds(self, device: torch.device, dtype: torch.dtype) -> torch.Tensor:
+        """Return per-group AR bounds tensor ordered as L, M, H."""
+        if (
+            self._cached_fd_bounds is None
+            or self._cached_fd_bounds.device != device
+            or self._cached_fd_bounds.dtype != dtype
+        ):
+            bounds = [
+                (
+                    self.fd_group_rules.get(k, {}).get("ar_min", -torch.inf),
+                    self.fd_group_rules.get(k, {}).get("ar_max", torch.inf),
+                )
+                for k in ("L", "M", "H")
+            ]
+            self._cached_fd_bounds = torch.tensor(bounds, device=device, dtype=dtype)
+        return self._cached_fd_bounds
+
+    def _log_fd_debug(
+        self, mask_gt: torch.Tensor, fd_filter_mask: torch.Tensor, composite_cost: dict[str, torch.Tensor]
+    ):
+        """Log FD filtering ratios and basic geometry cost stats for debugging."""
+        total_candidates = int(mask_gt.sum().item())
+        if total_candidates == 0:
+            return
+        filtered = int(fd_filter_mask.sum().item())
+        ratio = filtered / total_candidates * 100.0
+        ar_valid = composite_cost["ar"][composite_cost["ar"].isfinite()]
+        theta_valid = composite_cost["theta"][composite_cost["theta"].isfinite()]
+        ar_mean = float(ar_valid.mean().item()) if ar_valid.numel() else 0.0
+        theta_mean = float(theta_valid.mean().item()) if theta_valid.numel() else 0.0
+        LOGGER.info(
+            "[FD-Assign] filtered=%.2f%% (%d/%d) ar_cost=%.4f theta_cost=%.4f",
+            ratio,
+            filtered,
+            total_candidates,
+            ar_mean,
+            theta_mean,
+        )
+
     def iou_calculation(self, gt_bboxes, pd_bboxes):
         """Calculate IoU for rotated bounding boxes."""
         return probiou(gt_bboxes, pd_bboxes).squeeze(-1).clamp_(0)
@@ -347,6 +499,20 @@ class RotatedTaskAlignedAssigner(TaskAlignedAssigner):
         ap_dot_ab = (ap * ab).sum(dim=-1)
         ap_dot_ad = (ap * ad).sum(dim=-1)
         return (ap_dot_ab >= 0) & (ap_dot_ab <= norm_ab) & (ap_dot_ad >= 0) & (ap_dot_ad <= norm_ad)  # is_in_box
+
+
+def fd_cost_sanity_check() -> bool:
+    """Lightweight check to ensure AR/theta proximity lowers the composite FD cost."""
+    assigner = RotatedTaskAlignedAssigner(fd_use_hard_gating=False)
+    gt_box = torch.tensor([[0.0, 0.0, 4.0, 1.0, 0.0]])
+    fd_val = torch.tensor([[1.5]])
+    pred_good = torch.tensor([[0.0, 0.0, 4.0, 1.0, 0.05]])
+    pred_bad = torch.tensor([[0.0, 0.0, 6.0, 1.0, 0.5]])
+
+    cost_good, _ = assigner._fd_composite_cost(gt_box, pred_good, fd_val)
+    cost_bad, _ = assigner._fd_composite_cost(gt_box, pred_bad, fd_val)
+
+    return bool(cost_good["ar"].mean() < cost_bad["ar"].mean() and cost_good["theta"].mean() < cost_bad["theta"].mean())
 
 
 def make_anchors(feats, strides, grid_cell_offset=0.5):
