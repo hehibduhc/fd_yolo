@@ -2155,6 +2155,11 @@ class Format:
         labels["img"] = self._format_img(img)
         labels["cls"] = torch.from_numpy(cls) if nl else torch.zeros(nl, 1)
         labels["bboxes"] = torch.from_numpy(instances.bboxes) if nl else torch.zeros((nl, 4))
+        if "fd" in labels:
+            fd_vals = labels["fd"]
+            labels["fd"] = (
+                torch.from_numpy(fd_vals).float() if nl else torch.full((0, 1), float("nan"), dtype=torch.float32)
+            )
         if self.return_keypoint:
             labels["keypoints"] = (
                 torch.empty(0, 3) if instances.keypoints is None else torch.from_numpy(instances.keypoints)
