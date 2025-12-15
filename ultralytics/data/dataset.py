@@ -138,12 +138,14 @@ class YOLODataset(BaseDataset):
                 ne += ne_f
                 nc += nc_f
                 if im_file:
+                    fd_column = lb[:, 5:6] if lb.shape[1] > 5 else np.full((lb.shape[0], 1), np.nan, dtype=np.float32)
                     x["labels"].append(
                         {
                             "im_file": im_file,
                             "shape": shape,
                             "cls": lb[:, 0:1],  # n, 1
-                            "bboxes": lb[:, 1:],  # n, 4
+                            "bboxes": lb[:, 1:5],  # n, 4 (additional columns handled separately)
+                            "fd": fd_column,
                             "segments": segments,
                             "keypoints": keypoint,
                             "normalized": True,
@@ -362,7 +364,7 @@ class YOLODataset(BaseDataset):
                 value = torch.stack(value, 0)
             elif k == "visuals":
                 value = torch.nn.utils.rnn.pad_sequence(value, batch_first=True)
-            if k in {"masks", "keypoints", "bboxes", "cls", "segments", "obb", "theta_prior", "fd_norm"}:
+            if k in {"masks", "keypoints", "bboxes", "cls", "segments", "obb", "theta_prior", "fd_norm", "fd"}:
                 value = torch.cat(value, 0)
             new_batch[k] = value
         new_batch["batch_idx"] = list(new_batch["batch_idx"])
