@@ -956,14 +956,7 @@ class v8OBBLoss(v8DetectionLoss):
         gt_fd: torch.Tensor | None,
     ) -> torch.Tensor | None:
         """Smooth L1 loss on fractal-dimension predictions for matched positives."""
-
-        if (
-            self.lambda_fd_reg <= 0
-            or fd_pred is None
-            or gt_fd is None
-            or gt_fd.shape[1] == 0
-            or not fg_mask.any()
-        ):
+        if self.lambda_fd_reg <= 0 or fd_pred is None or gt_fd is None or gt_fd.shape[1] == 0 or not fg_mask.any():
             return None
 
         max_boxes = gt_fd.shape[1]
