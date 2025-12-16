@@ -17,7 +17,7 @@ from torch.utils.data import ConcatDataset
 
 from ultralytics.utils import LOCAL_RANK, LOGGER, NUM_THREADS, TQDM, colorstr
 from ultralytics.utils.instance import Instances
-from ultralytics.utils.ops import resample_segments, segments2boxes
+from ultralytics.utils.ops import resample_segments, segments2boxes, xyxyxyxy2xywhr
 from ultralytics.utils.torch_utils import TORCHVISION_0_18
 
 from .augment import (
@@ -43,7 +43,7 @@ from .utils import (
 )
 
 # Ultralytics dataset *.cache version, >= 1.0.0 for Ultralytics YOLO models
-DATASET_CACHE_VERSION = "1.0.3"
+DATASET_CACHE_VERSION = "1.0.4"
 
 
 class YOLODataset(BaseDataset):
@@ -117,6 +117,14 @@ class YOLODataset(BaseDataset):
                 "'kpt_shape' in data.yaml missing or incorrect. Should be a list with [number of "
                 "keypoints, number of dims (2 for x,y or 3 for x,y,visible)], i.e. 'kpt_shape: [17, 3]'"
             )
+        if getattr(self, "args", None) and getattr(self.args, "debug", False):
+            sample_corners = np.array([[0.2, 0.2, 0.4, 0.2, 0.4, 0.4, 0.2, 0.4]], dtype=np.float32).reshape(-1, 4, 2)
+            sample_xywhr = xyxyxyxy2xywhr(sample_corners)
+            LOGGER.debug(
+                f"OBB sanity check (corners->xywhr): cx={sample_xywhr[0,0]:.3f}, cy={sample_xywhr[0,1]:.3f}, "
+                f"w={sample_xywhr[0,2]:.3f}, h={sample_xywhr[0,3]:.3f}, theta={sample_xywhr[0,4]:.3f}"
+            )
+
         with ThreadPool(NUM_THREADS) as pool:
             results = pool.imap(
                 func=verify_image_label,
@@ -138,18 +146,44 @@ class YOLODataset(BaseDataset):
                 ne += ne_f
                 nc += nc_f
                 if im_file:
-                    x["labels"].append(
-                        {
-                            "im_file": im_file,
-                            "shape": shape,
-                            "cls": lb[:, 0:1],  # n, 1
-                            "bboxes": lb[:, 1:],  # n, 4
-                            "segments": segments,
-                            "keypoints": keypoint,
-                            "normalized": True,
-                            "bbox_format": "xywh",
-                        }
-                    )
+                    label_shape = lb.shape[1]
+                    fd_column = np.full((lb.shape[0], 1), np.nan, dtype=np.float32)
+                    ar_column = None
+                    bbox_format = "xywh"
+                    bboxes = lb[:, 1:5]
+                    if label_shape >= 9:
+                        corners = lb[:, 1:9].reshape(-1, 4, 2)
+                        bboxes = xyxyxyxy2xywhr(corners).astype(np.float32)
+                        bbox_format = "xywhr"
+                        segments = corners if len(corners) else []
+                        if label_shape >= 10:
+                            fd_column = lb[:, 9:10]
+                        if label_shape >= 11:
+                            ar_column = lb[:, 10:11]
+                    elif label_shape >= 6:
+                        bboxes = lb[:, 1:6]
+                        bbox_format = "xywhr"
+                        if label_shape >= 7:
+                            fd_column = lb[:, 6:7]
+                        if label_shape >= 8:
+                            ar_column = lb[:, 7:8]
+                    else:
+                        if label_shape > 5:
+                            fd_column = lb[:, 5:6]
+                    label_entry = {
+                        "im_file": im_file,
+                        "shape": shape,
+                        "cls": lb[:, 0:1],  # n, 1
+                        "bboxes": bboxes,
+                        "fd": fd_column,
+                        "segments": segments,
+                        "keypoints": keypoint,
+                        "normalized": True,
+                        "bbox_format": bbox_format,
+                    }
+                    if ar_column is not None:
+                        label_entry["ar"] = ar_column
+                    x["labels"].append(label_entry)
                 if msg:
                     msgs.append(msg)
                 pbar.desc = f"{desc} {nf} images, {nm + ne} backgrounds, {nc} corrupt"
@@ -232,7 +266,7 @@ class YOLODataset(BaseDataset):
             transforms = Compose([LetterBox(new_shape=(self.imgsz, self.imgsz), scaleup=False)])
         transforms.append(
             Format(
-                bbox_format="xywh",
+                bbox_format="xywhr" if self.use_obb else "xywh",
                 normalize=True,
                 return_mask=self.use_segments,
                 return_keypoint=self.use_keypoints,
@@ -279,11 +313,14 @@ class YOLODataset(BaseDataset):
         # NOTE: do NOT resample oriented boxes
         segment_resamples = 100 if self.use_obb else 1000
         if len(segments) > 0:
-            # make sure segments interpolate correctly if original length is greater than segment_resamples
-            max_len = max(len(s) for s in segments)
-            segment_resamples = (max_len + 1) if segment_resamples < max_len else segment_resamples
-            # list[np.array(segment_resamples, 2)] * num_samples
-            segments = np.stack(resample_segments(segments, n=segment_resamples), axis=0)
+            if self.use_obb:
+                segments = np.stack(segments, axis=0)
+            else:
+                # make sure segments interpolate correctly if original length is greater than segment_resamples
+                max_len = max(len(s) for s in segments)
+                segment_resamples = (max_len + 1) if segment_resamples < max_len else segment_resamples
+                # list[np.array(segment_resamples, 2)] * num_samples
+                segments = np.stack(resample_segments(segments, n=segment_resamples), axis=0)
         else:
             segments = np.zeros((0, segment_resamples, 2), dtype=np.float32)
         label["instances"] = Instances(bboxes, segments, keypoints, bbox_format=bbox_format, normalized=normalized)
@@ -362,7 +399,7 @@ class YOLODataset(BaseDataset):
                 value = torch.stack(value, 0)
             elif k == "visuals":
                 value = torch.nn.utils.rnn.pad_sequence(value, batch_first=True)
-            if k in {"masks", "keypoints", "bboxes", "cls", "segments", "obb", "theta_prior", "fd_norm"}:
+            if k in {"masks", "keypoints", "bboxes", "cls", "segments", "obb", "theta_prior", "fd_norm", "fd", "ar"}:
                 value = torch.cat(value, 0)
             new_batch[k] = value
         new_batch["batch_idx"] = list(new_batch["batch_idx"])
