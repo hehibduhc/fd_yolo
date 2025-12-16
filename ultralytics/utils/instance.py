@@ -92,6 +92,20 @@ class Bboxes:
                 self.bboxes = base
                 self.convert(format=temp_format)
                 return
+
+            if format == "xywhr":
+                # Upgrade axis-aligned boxes with a zero-rotation channel
+                if self.format == "xyxy":
+                    self.bboxes = xyxy2xywh(self.bboxes)
+                    self.format = "xywh"
+                elif self.format == "ltwh":
+                    self.bboxes = ltwh2xywh(self.bboxes)
+                    self.format = "xywh"
+                theta = np.zeros((self.bboxes.shape[0], 1), dtype=self.bboxes.dtype)
+                self.bboxes = np.concatenate([self.bboxes, theta], axis=1)
+                self.format = "xywhr"
+                return
+
             raise NotImplementedError(
                 f"Conversion between {self.format} and {format} is not supported without rotation metadata."
             )
