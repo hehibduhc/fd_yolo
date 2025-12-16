@@ -315,9 +315,7 @@ class OBB(Detect):
 
         if self.fd_branch:
             c_fd = max(ch[0] // 4, 16)
-            self.fd_heads = nn.ModuleList(
-                nn.Sequential(Conv(x, c_fd, 3), nn.SiLU(), nn.Conv2d(c_fd, 1, 1)) for x in ch
-            )
+            self.fd_heads = nn.ModuleList(nn.Sequential(Conv(x, c_fd, 3), nn.SiLU(), nn.Conv2d(c_fd, 1, 1)) for x in ch)
             self.gate_convs = nn.ModuleList(nn.Conv2d(1, self.num_experts, 1) for _ in ch)
 
         if self.fd_expert_head:
@@ -375,7 +373,13 @@ class OBB(Detect):
             if self.fd_branch:
                 fd_out = [self.fd_heads[i](x[i]).view(bs, 1, -1) for i in range(self.nl)]
                 fd_pred = torch.cat(fd_out, 2)
-            head_outputs = Detect.forward(self, x)
+            det_out = Detect.forward(self, x)
+            if isinstance(det_out, tuple):
+                y, feats = det_out
+            else:
+                feats = det_out
+                y = det_out
+            head_outputs = feats
 
         if self.training:
             return (head_outputs, angle, fd_pred) if self.fd_branch else (head_outputs, angle)
@@ -385,9 +389,8 @@ class OBB(Detect):
             train_out = (head_outputs, angle, fd_pred) if self.fd_branch else (head_outputs, angle)
             return torch.cat([y, angle], 1) if self.export else (torch.cat([y, angle], 1), train_out)
 
-        x_out = head_outputs
-        train_out = (x_out, angle, fd_pred) if self.fd_branch else (x_out, angle)
-        return torch.cat([x_out, angle], 1) if self.export else (torch.cat([x_out[0], angle], 1), train_out)
+        train_out = (head_outputs, angle, fd_pred) if self.fd_branch else (head_outputs, angle)
+        return torch.cat([y, angle], 1) if self.export else (torch.cat([y, angle], 1), train_out)
 
     def decode_bboxes(self, bboxes: torch.Tensor, anchors: torch.Tensor) -> torch.Tensor:
         """Decode rotated bounding boxes."""
