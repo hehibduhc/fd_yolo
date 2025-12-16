@@ -27,7 +27,7 @@ to_4tuple = _ntuple(4)
 # `xyxy` means left top and right bottom
 # `xywh` means center x, center y and width, height(YOLO format)
 # `ltwh` means left top and width, height(COCO format)
-_formats = ["xyxy", "xywh", "ltwh"]
+_formats = ["xyxy", "xywh", "ltwh", "xywhr"]
 
 __all__ = ("Bboxes", "Instances")  # tuple or list
 
@@ -69,7 +69,8 @@ class Bboxes:
         assert format in _formats, f"Invalid bounding box format: {format}, format must be one of {_formats}"
         bboxes = bboxes[None, :] if bboxes.ndim == 1 else bboxes
         assert bboxes.ndim == 2
-        assert bboxes.shape[1] == 4
+        expected_dims = 5 if format == "xywhr" else 4
+        assert bboxes.shape[1] == expected_dims
         self.bboxes = bboxes
         self.format = format
 
@@ -82,6 +83,18 @@ class Bboxes:
         assert format in _formats, f"Invalid bounding box format: {format}, format must be one of {_formats}"
         if self.format == format:
             return
+        if "xywhr" in {self.format, format}:
+            if self.format == "xywhr" and format in {"xywh", "ltwh", "xyxy"}:
+                # Drop rotation information when converting to axis-aligned formats
+                temp_format = "xywh" if format == "xywh" else "ltwh" if format == "ltwh" else "xyxy"
+                base = self.bboxes[:, :4]
+                self.format = "xywh"  # temporary for conversion
+                self.bboxes = base
+                self.convert(format=temp_format)
+                return
+            raise NotImplementedError(
+                f"Conversion between {self.format} and {format} is not supported without rotation metadata."
+            )
         elif self.format == "xyxy":
             func = xyxy2xywh if format == "xywh" else xyxy2ltwh
         elif self.format == "xywh":
@@ -93,11 +106,11 @@ class Bboxes:
 
     def areas(self) -> np.ndarray:
         """Calculate the area of bounding boxes."""
-        return (
-            (self.bboxes[:, 2] - self.bboxes[:, 0]) * (self.bboxes[:, 3] - self.bboxes[:, 1])  # format xyxy
-            if self.format == "xyxy"
-            else self.bboxes[:, 3] * self.bboxes[:, 2]  # format xywh or ltwh
-        )
+        if self.format == "xyxy":
+            return (self.bboxes[:, 2] - self.bboxes[:, 0]) * (self.bboxes[:, 3] - self.bboxes[:, 1])
+        if self.format in {"xywh", "ltwh", "xywhr"}:
+            return self.bboxes[:, 3] * self.bboxes[:, 2]
+        raise NotImplementedError(f"Area computation not supported for format {self.format}")
 
     def mul(self, scale: int | tuple | list) -> None:
         """Multiply bounding box coordinates by scale factor(s).
@@ -106,14 +119,17 @@ class Bboxes:
             scale (int | tuple | list): Scale factor(s) for four coordinates. If int, the same scale is applied to all
                 coordinates.
         """
+        dims = self.bboxes.shape[1]
         if isinstance(scale, Number):
-            scale = to_4tuple(scale)
+            scale = (scale,) * dims
         assert isinstance(scale, (tuple, list))
-        assert len(scale) == 4
+        assert len(scale) == dims
         self.bboxes[:, 0] *= scale[0]
         self.bboxes[:, 1] *= scale[1]
         self.bboxes[:, 2] *= scale[2]
         self.bboxes[:, 3] *= scale[3]
+        if dims == 5:
+            self.bboxes[:, 4] *= scale[4]
 
     def add(self, offset: int | tuple | list) -> None:
         """Add offset to bounding box coordinates.
@@ -122,14 +138,17 @@ class Bboxes:
             offset (int | tuple | list): Offset(s) for four coordinates. If int, the same offset is applied to all
                 coordinates.
         """
+        dims = self.bboxes.shape[1]
         if isinstance(offset, Number):
-            offset = to_4tuple(offset)
+            offset = (offset,) * dims
         assert isinstance(offset, (tuple, list))
-        assert len(offset) == 4
+        assert len(offset) == dims
         self.bboxes[:, 0] += offset[0]
         self.bboxes[:, 1] += offset[1]
         self.bboxes[:, 2] += offset[2]
         self.bboxes[:, 3] += offset[3]
+        if dims == 5:
+            self.bboxes[:, 4] += offset[4]
 
     def __len__(self) -> int:
         """Return the number of bounding boxes."""
@@ -274,7 +293,8 @@ class Instances:
         """
         if not self.normalized:
             return
-        self._bboxes.mul(scale=(w, h, w, h))
+        scale = (w, h, w, h, 1) if self._bboxes.bboxes.shape[1] == 5 else (w, h, w, h)
+        self._bboxes.mul(scale=scale)
         self.segments[..., 0] *= w
         self.segments[..., 1] *= h
         if self.keypoints is not None:
@@ -291,7 +311,8 @@ class Instances:
         """
         if self.normalized:
             return
-        self._bboxes.mul(scale=(1 / w, 1 / h, 1 / w, 1 / h))
+        scale = (1 / w, 1 / h, 1 / w, 1 / h, 1) if self._bboxes.bboxes.shape[1] == 5 else (1 / w, 1 / h, 1 / w, 1 / h)
+        self._bboxes.mul(scale=scale)
         self.segments[..., 0] /= w
         self.segments[..., 1] /= h
         if self.keypoints is not None:

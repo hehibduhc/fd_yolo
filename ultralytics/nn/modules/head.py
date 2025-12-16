@@ -283,7 +283,17 @@ class OBB(Detect):
         >>> outputs = obb(x)
     """
 
-    def __init__(self, nc: int = 80, ne: int = 1, ch: tuple = ()):
+    def __init__(
+        self,
+        nc: int = 80,
+        ne: int = 1,
+        ch: tuple = (),
+        fd_branch: bool = False,
+        fd_expert_head: bool = False,
+        gate_detach: bool = False,
+        fd_gate_clamp_min: float | None = None,
+        fd_gate_clamp_max: float | None = None,
+    ):
         """Initialize OBB with number of classes `nc` and layer channels `ch`.
 
         Args:
@@ -292,10 +302,31 @@ class OBB(Detect):
             ch (tuple): Tuple of channel sizes from backbone feature maps.
         """
         super().__init__(nc, ch)
+        self.num_experts = 3
+        self.fd_expert_head = fd_expert_head
+        self.fd_branch = fd_branch or fd_expert_head
+        self.gate_detach = gate_detach
+        self.fd_gate_clamp_min = fd_gate_clamp_min
+        self.fd_gate_clamp_max = fd_gate_clamp_max
         self.ne = ne  # number of extra parameters
 
         c4 = max(ch[0] // 4, self.ne)
         self.cv4 = nn.ModuleList(nn.Sequential(Conv(x, c4, 3), Conv(c4, c4, 3), nn.Conv2d(c4, self.ne, 1)) for x in ch)
+
+        if self.fd_branch:
+            c_fd = max(ch[0] // 4, 16)
+            self.fd_heads = nn.ModuleList(
+                nn.Sequential(Conv(x, c_fd, 3), nn.SiLU(), nn.Conv2d(c_fd, 1, 1)) for x in ch
+            )
+            self.gate_convs = nn.ModuleList(nn.Conv2d(1, self.num_experts, 1) for _ in ch)
+
+        if self.fd_expert_head:
+            self.cls_experts = nn.ModuleList(
+                nn.ModuleList(self._build_cls_head(x) for _ in range(self.num_experts)) for x in ch
+            )
+            self.reg_experts = nn.ModuleList(
+                nn.ModuleList(self._build_reg_head(x) for _ in range(self.num_experts)) for x in ch
+            )
 
     def forward(self, x: list[torch.Tensor]) -> torch.Tensor | tuple:
         """Concatenate and return predicted bounding boxes and class probabilities."""
@@ -306,14 +337,73 @@ class OBB(Detect):
         # angle = angle.sigmoid() * math.pi / 2  # [0, pi/2]
         if not self.training:
             self.angle = angle
-        x = Detect.forward(self, x)
+        fd_pred = None
+        if self.fd_expert_head:
+            cls_out, reg_out, fd_out = [], [], []
+            for i in range(self.nl):
+                feat = x[i]
+                fd_map = None
+                if self.fd_branch:
+                    fd_map = self.fd_heads[i](feat)
+                    fd_out.append(fd_map.view(bs, 1, -1))
+
+                cls_candidates = [head(feat) for head in self.cls_experts[i]]
+                reg_candidates = [head(feat) for head in self.reg_experts[i]]
+
+                cls_stack = torch.stack(cls_candidates, dim=1)
+                reg_stack = torch.stack(reg_candidates, dim=1)
+
+                if fd_map is None:
+                    gate_logits = torch.zeros(
+                        (bs, self.num_experts, *feat.shape[2:]), device=feat.device, dtype=feat.dtype
+                    )
+                else:
+                    gate_src = fd_map.detach() if self.gate_detach else fd_map
+                    if self.fd_gate_clamp_min is not None:
+                        gate_src = gate_src.clamp(min=self.fd_gate_clamp_min)
+                    if self.fd_gate_clamp_max is not None:
+                        gate_src = gate_src.clamp(max=self.fd_gate_clamp_max)
+                    gate_logits = self.gate_convs[i](gate_src)
+                gate = F.softmax(gate_logits, dim=1)
+
+                cls_out.append((gate.unsqueeze(2) * cls_stack).sum(dim=1))
+                reg_out.append((gate.unsqueeze(2) * reg_stack).sum(dim=1))
+
+            head_outputs = [torch.cat((reg_out[i], cls_out[i]), 1) for i in range(self.nl)]
+            fd_pred = torch.cat(fd_out, 2) if self.fd_branch else None
+        else:
+            if self.fd_branch:
+                fd_out = [self.fd_heads[i](x[i]).view(bs, 1, -1) for i in range(self.nl)]
+                fd_pred = torch.cat(fd_out, 2)
+            head_outputs = Detect.forward(self, x)
+
         if self.training:
-            return x, angle
-        return torch.cat([x, angle], 1) if self.export else (torch.cat([x[0], angle], 1), (x[1], angle))
+            return (head_outputs, angle, fd_pred) if self.fd_branch else (head_outputs, angle)
+
+        if self.fd_expert_head:
+            y = self._inference(head_outputs)
+            return torch.cat([y, angle], 1) if self.export else (torch.cat([y, angle], 1), (head_outputs, angle))
+
+        x_out = head_outputs
+        return torch.cat([x_out, angle], 1) if self.export else (torch.cat([x_out[0], angle], 1), (x_out[1], angle))
 
     def decode_bboxes(self, bboxes: torch.Tensor, anchors: torch.Tensor) -> torch.Tensor:
         """Decode rotated bounding boxes."""
         return dist2rbox(bboxes, self.angle, anchors, dim=1)
+
+    def _build_reg_head(self, ch_in: int) -> nn.Sequential:
+        c2 = max((16, ch_in // 4, 4 * self.reg_max))
+        return nn.Sequential(Conv(ch_in, c2, 3), Conv(c2, c2, 3), nn.Conv2d(c2, 4 * self.reg_max, 1))
+
+    def _build_cls_head(self, ch_in: int) -> nn.Sequential:
+        c3 = max(ch_in, min(self.nc, 100))
+        if self.legacy:
+            return nn.Sequential(Conv(ch_in, c3, 3), Conv(c3, c3, 3), nn.Conv2d(c3, self.nc, 1))
+        return nn.Sequential(
+            nn.Sequential(DWConv(ch_in, ch_in, 3), Conv(ch_in, c3, 1)),
+            nn.Sequential(DWConv(c3, c3, 3), Conv(c3, c3, 1)),
+            nn.Conv2d(c3, self.nc, 1),
+        )
 
 
 class Pose(Detect):
