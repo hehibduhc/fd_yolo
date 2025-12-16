@@ -1,4 +1,5 @@
 # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
+from __future__ import annotations
 
 import torch
 import torch.nn as nn
@@ -7,6 +8,54 @@ from . import LOGGER
 from .metrics import bbox_iou, probiou
 from .ops import xywhr2xyxyxyxy
 from .torch_utils import TORCH_1_11
+
+DEFAULT_FD_GROUP_RULES = {
+    "L": {"ar_min": 3.0, "ar_max": 10.0},
+    "M": {"ar_min": 2.0, "ar_max": 10.0},
+    "H": {"ar_min": 1.0, "ar_max": 4.0},
+}
+
+
+DEFAULT_FD_GROUP_RULES = {
+    "L": {"ar_min": 3.0, "ar_max": 10.0},
+    "M": {"ar_min": 2.0, "ar_max": 10.0},
+    "H": {"ar_min": 1.0, "ar_max": 4.0},
+}
+
+
+DEFAULT_FD_GROUP_RULES = {
+    "L": {"ar_min": 3.0, "ar_max": 10.0},
+    "M": {"ar_min": 2.0, "ar_max": 10.0},
+    "H": {"ar_min": 1.0, "ar_max": 4.0},
+}
+
+
+DEFAULT_FD_GROUP_RULES = {
+    "L": {"ar_min": 3.0, "ar_max": 10.0},
+    "M": {"ar_min": 2.0, "ar_max": 10.0},
+    "H": {"ar_min": 1.0, "ar_max": 4.0},
+}
+
+
+DEFAULT_FD_GROUP_RULES = {
+    "L": {"ar_min": 3.0, "ar_max": 10.0},
+    "M": {"ar_min": 2.0, "ar_max": 10.0},
+    "H": {"ar_min": 1.0, "ar_max": 4.0},
+}
+
+
+DEFAULT_FD_GROUP_RULES = {
+    "L": {"ar_min": 3.0, "ar_max": 10.0},
+    "M": {"ar_min": 2.0, "ar_max": 10.0},
+    "H": {"ar_min": 1.0, "ar_max": 4.0},
+}
+
+
+DEFAULT_FD_GROUP_RULES = {
+    "L": {"ar_min": 3.0, "ar_max": 10.0},
+    "M": {"ar_min": 2.0, "ar_max": 10.0},
+    "H": {"ar_min": 1.0, "ar_max": 4.0},
+}
 
 
 DEFAULT_FD_GROUP_RULES = {
