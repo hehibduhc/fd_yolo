@@ -2154,7 +2154,16 @@ class Format:
             labels["masks"] = masks
         labels["img"] = self._format_img(img)
         labels["cls"] = torch.from_numpy(cls) if nl else torch.zeros(nl, 1)
-        labels["bboxes"] = torch.from_numpy(instances.bboxes) if nl else torch.zeros((nl, 4))
+        bbox_dim = instances.bboxes.shape[1] if nl else (5 if self.bbox_format == "xywhr" else 4)
+        labels["bboxes"] = torch.from_numpy(instances.bboxes) if nl else torch.zeros((nl, bbox_dim))
+        if "fd" in labels:
+            fd_vals = labels["fd"]
+            labels["fd"] = (
+                torch.from_numpy(fd_vals).float() if nl else torch.full((0, 1), float("nan"), dtype=torch.float32)
+            )
+        if "ar" in labels:
+            ar_vals = labels["ar"]
+            labels["ar"] = torch.from_numpy(ar_vals).float() if nl else torch.zeros((0, 1), dtype=torch.float32)
         if self.return_keypoint:
             labels["keypoints"] = (
                 torch.empty(0, 3) if instances.keypoints is None else torch.from_numpy(instances.keypoints)
@@ -2163,9 +2172,12 @@ class Format:
                 labels["keypoints"][..., 0] /= w
                 labels["keypoints"][..., 1] /= h
         if self.return_obb:
-            labels["bboxes"] = (
-                xyxyxyxy2xywhr(torch.from_numpy(instances.segments)) if len(instances.segments) else torch.zeros((0, 5))
-            )
+            if len(instances.segments):
+                labels["bboxes"] = xyxyxyxy2xywhr(torch.from_numpy(instances.segments))
+            elif instances._bboxes.format == "xywhr":
+                labels["bboxes"] = torch.from_numpy(instances.bboxes) if nl else torch.zeros((0, 5))
+            else:
+                labels["bboxes"] = torch.zeros((0, 5))
         # NOTE: need to normalize obb in xywhr format for width-height consistency
         if self.normalize:
             labels["bboxes"][:, [0, 2]] /= w
