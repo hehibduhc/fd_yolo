@@ -245,6 +245,19 @@ class v8DetectionLoss:
         """Calculate the sum of the loss for box, cls and dfl multiplied by batch size."""
         loss = torch.zeros(3, device=self.device)  # box, cls, dfl
         feats = preds[1] if isinstance(preds, tuple) else preds
+        # Align reg_max/no with actual head outputs in case a different DFL depth is used at build time.
+        # This prevents shape errors during validation when head channels and stored hyper-parameters diverge.
+        head_ch = feats[0].shape[1]
+        if head_ch != self.no:
+            inferred_reg_max = (head_ch - self.nc) // 4
+            if inferred_reg_max > 0 and inferred_reg_max * 4 + self.nc == head_ch:
+                self.reg_max = inferred_reg_max
+                self.no = head_ch
+                self.proj = torch.arange(self.reg_max, dtype=torch.float, device=self.device)
+                self.bbox_loss = BboxLoss(self.reg_max).to(self.device)
+            else:
+                raise ValueError(f"Unexpected OBB head channels: {head_ch}, cannot infer reg_max")
+
         pred_distri, pred_scores = torch.cat([xi.view(feats[0].shape[0], self.no, -1) for xi in feats], 2).split(
             (self.reg_max * 4, self.nc), 1
         )
@@ -723,6 +736,17 @@ class v8OBBLoss(v8DetectionLoss):
         else:
             feats, pred_angle, fd_pred = preds, None, None
         batch_size = pred_angle.shape[0]  # batch size, number of masks, mask height, mask width
+        head_ch = feats[0].shape[1]
+        if head_ch != self.no:
+            inferred_reg_max = (head_ch - self.nc) // 4
+            if inferred_reg_max > 0 and inferred_reg_max * 4 + self.nc == head_ch:
+                self.reg_max = inferred_reg_max
+                self.no = head_ch
+                self.proj = torch.arange(self.reg_max, dtype=torch.float, device=self.device)
+                self.bbox_loss = RotatedBboxLoss(self.reg_max).to(self.device)
+            else:
+                raise ValueError(f"Unexpected OBB head channels: {head_ch}, cannot infer reg_max")
+
         pred_distri, pred_scores = torch.cat([xi.view(feats[0].shape[0], self.no, -1) for xi in feats], 2).split(
             (self.reg_max * 4, self.nc), 1
         )
