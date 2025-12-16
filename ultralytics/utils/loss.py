@@ -299,8 +299,9 @@ class v8DetectionLoss:
         loss[0] *= self.hyp.box  # box gain
         loss[1] *= self.hyp.cls  # cls gain
         loss[2] *= self.hyp.dfl  # dfl gain
+        loss[3] *= self.lambda_fd_reg  # fd gain
 
-        return loss * batch_size, loss.detach()  # loss(box, cls, dfl)
+        return loss * batch_size, loss.detach()  # loss(box, cls, dfl, fd)
 
 
 class v8SegmentationLoss(v8DetectionLoss):
@@ -561,7 +562,7 @@ class v8PoseLoss(v8DetectionLoss):
         loss[3] *= self.hyp.cls  # cls gain
         loss[4] *= self.hyp.dfl  # dfl gain
 
-        return loss * batch_size, loss.detach()  # loss(box, cls, dfl)
+        return loss * batch_size, loss.detach()  # loss(box, cls, dfl, fd)
 
     @staticmethod
     def kpts_decode(anchor_points: torch.Tensor, pred_kpts: torch.Tensor) -> torch.Tensor:
@@ -661,8 +662,23 @@ class v8OBBLoss(v8DetectionLoss):
     def __init__(self, model):
         """Initialize v8OBBLoss with model, assigner, and rotated bbox loss; model must be de-paralleled."""
         super().__init__(model)
-        self.assigner = RotatedTaskAlignedAssigner(topk=10, num_classes=self.nc, alpha=0.5, beta=6.0)
+        fd_group_rules = getattr(self.hyp, "fd_group_rules", None)
+        fd_thresholds = getattr(self.hyp, "fd_thresholds", (1.45, 1.61))
+        fd_cost_weights = getattr(self.hyp, "fd_cost_weights", (1.0, 0.5, 0.2, 1.0))
+        self.assigner = RotatedTaskAlignedAssigner(
+            topk=10,
+            num_classes=self.nc,
+            alpha=0.5,
+            beta=6.0,
+            fd_group_rules=fd_group_rules,
+            fd_thresholds=fd_thresholds,
+            fd_cost_weights=fd_cost_weights,
+            fd_penalty=float(getattr(self.hyp, "fd_penalty", 3.0)),
+            fd_use_hard_gating=bool(getattr(self.hyp, "fd_use_hard_gating", False)),
+            fd_debug=bool(getattr(self.hyp, "fd_assigner_debug", False)),
+        )
         self.bbox_loss = RotatedBboxLoss(self.reg_max).to(self.device)
+        self.lambda_fd_reg = float(getattr(self.hyp, "lambda_fd_reg", 0.0))
         self.angle_prior_lambda = float(getattr(self.hyp, "angle_prior_lambda", 0.0))
         self.angle_prior_beta = float(getattr(self.hyp, "angle_prior_beta", 0.0))
         self.rank = int(getattr(model, "rank", -1))
@@ -691,8 +707,21 @@ class v8OBBLoss(v8DetectionLoss):
     def __call__(self, preds: Any, batch: dict[str, torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor]:
         """Calculate and return the loss for oriented bounding box detection."""
         self._log_angle_prior_hyp()
-        loss = torch.zeros(3, device=self.device)  # box, cls, dfl
-        feats, pred_angle = preds if isinstance(preds[0], list) else preds[1]
+        loss = torch.zeros(4, device=self.device)  # box, cls, dfl, fd
+        if isinstance(preds, (list, tuple)):
+            # Unwrap inference tuple (preds, train_out)
+            preds = preds[1] if len(preds) == 2 and isinstance(preds[1], (list, tuple)) else preds
+
+            if len(preds) == 3:
+                feats, pred_angle, fd_pred = preds
+            elif len(preds) == 2:
+                feats, pred_angle = preds
+                fd_pred = None
+            else:
+                feats, pred_angle = preds[0], preds[1]
+                fd_pred = None
+        else:
+            feats, pred_angle, fd_pred = preds, None, None
         batch_size = pred_angle.shape[0]  # batch size, number of masks, mask height, mask width
         pred_distri, pred_scores = torch.cat([xi.view(feats[0].shape[0], self.no, -1) for xi in feats], 2).split(
             (self.reg_max * 4, self.nc), 1
@@ -702,6 +731,7 @@ class v8OBBLoss(v8DetectionLoss):
         pred_scores = pred_scores.permute(0, 2, 1).contiguous()
         pred_distri = pred_distri.permute(0, 2, 1).contiguous()
         pred_angle = pred_angle.permute(0, 2, 1).contiguous()
+        fd_pred = fd_pred.permute(0, 2, 1).contiguous() if fd_pred is not None else None
 
         dtype = pred_scores.dtype
         imgsz = torch.tensor(feats[0].shape[2:], device=self.device, dtype=dtype) * self.stride[0]  # image size (h,w)
@@ -712,7 +742,7 @@ class v8OBBLoss(v8DetectionLoss):
         fd_norm_tensor = batch.get("fd_norm") if self.angle_prior_lambda > 0 else None
         self._log_prior_tensor_stats(theta_prior_tensor, self.theta_prior_stats, "theta_prior")
         self._log_prior_tensor_stats(fd_norm_tensor, self.fd_norm_stats, "fd_norm")
-        gt_theta_prior = gt_fd_norm = None
+        gt_theta_prior = gt_fd_norm = gt_fd = None
         try:
             batch_idx = batch["batch_idx"].view(-1, 1)
             cls_targets = batch["cls"].view(-1, 1)
@@ -747,6 +777,11 @@ class v8OBBLoss(v8DetectionLoss):
                         batch_size,
                         gt_bboxes.shape[1],
                     )
+            fd_tensor = batch.get("fd")
+            if fd_tensor is not None:
+                fd_flat = fd_tensor.reshape(-1, 1).to(self.device, dtype=pred_angle.dtype)
+                fd_filtered = fd_flat[keep_mask]
+                gt_fd = self._scatter_gt_feature(fd_filtered, img_indices, batch_size, gt_bboxes.shape[1])
 
         except RuntimeError as e:
             raise TypeError(
@@ -770,6 +805,7 @@ class v8OBBLoss(v8DetectionLoss):
             gt_labels,
             gt_bboxes,
             mask_gt,
+            gt_fd=gt_fd,
         )
 
         target_scores_sum = max(target_scores.sum(), 1)
@@ -795,8 +831,15 @@ class v8OBBLoss(v8DetectionLoss):
                 loss[0] = loss[0] + angle_prior_loss
                 self._log_angle_prior_loss_value(angle_prior_loss)
 
+            fd_loss = self._fd_reg_loss(fd_pred, fg_mask, target_gt_idx, gt_fd)
+            if fd_loss is not None:
+                loss[3] = fd_loss
+
         else:
             loss[0] += (pred_angle * 0).sum()
+            loss[2] += (pred_angle * 0).sum()
+            if fd_pred is not None:
+                loss[3] += (fd_pred * 0).sum()
 
         loss[0] *= self.hyp.box  # box gain
         loss[1] *= self.hyp.cls  # cls gain
@@ -907,6 +950,33 @@ class v8OBBLoss(v8DetectionLoss):
             b, a, c = pred_dist.shape  # batch, anchors, channels
             pred_dist = pred_dist.view(b, a, 4, c // 4).softmax(3).matmul(self.proj.type(pred_dist.dtype))
         return torch.cat((dist2rbox(pred_dist, pred_angle, anchor_points), pred_angle), dim=-1)
+
+    def _fd_reg_loss(
+        self,
+        fd_pred: torch.Tensor | None,
+        fg_mask: torch.Tensor,
+        target_gt_idx: torch.Tensor,
+        gt_fd: torch.Tensor | None,
+    ) -> torch.Tensor | None:
+        """Smooth L1 loss on fractal-dimension predictions for matched positives."""
+
+        if (
+            self.lambda_fd_reg <= 0
+            or fd_pred is None
+            or gt_fd is None
+            or gt_fd.shape[1] == 0
+            or not fg_mask.any()
+        ):
+            return None
+
+        max_boxes = gt_fd.shape[1]
+        gather_idx = target_gt_idx.clamp(min=0, max=max_boxes - 1).unsqueeze(-1)
+        fd_gt = torch.gather(gt_fd, 1, gather_idx)
+        fd_gt_pos = fd_gt[fg_mask]
+        fd_pred_pos = fd_pred[fg_mask]
+        if fd_gt_pos.numel() == 0:
+            return None
+        return F.smooth_l1_loss(fd_pred_pos, fd_gt_pos, reduction="sum") / max(fd_gt_pos.numel(), 1)
 
 
 class E2EDetectLoss:
