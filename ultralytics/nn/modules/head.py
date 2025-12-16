@@ -315,7 +315,9 @@ class OBB(Detect):
 
         if self.fd_branch:
             c_fd = max(ch[0] // 4, 16)
-            self.fd_heads = nn.ModuleList(nn.Sequential(Conv(x, c_fd, 3), nn.SiLU(), nn.Conv2d(c_fd, 1, 1)) for x in ch)
+            self.fd_heads = nn.ModuleList(
+                nn.Sequential(Conv(x, c_fd, 3), nn.SiLU(), nn.Conv2d(c_fd, 1, 1)) for x in ch
+            )
             self.gate_convs = nn.ModuleList(nn.Conv2d(1, self.num_experts, 1) for _ in ch)
 
         if self.fd_expert_head:
