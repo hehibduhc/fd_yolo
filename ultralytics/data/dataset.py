@@ -121,8 +121,8 @@ class YOLODataset(BaseDataset):
             sample_corners = np.array([[0.2, 0.2, 0.4, 0.2, 0.4, 0.4, 0.2, 0.4]], dtype=np.float32).reshape(-1, 4, 2)
             sample_xywhr = xyxyxyxy2xywhr(sample_corners)
             LOGGER.debug(
-                f"OBB sanity check (corners->xywhr): cx={sample_xywhr[0,0]:.3f}, cy={sample_xywhr[0,1]:.3f}, "
-                f"w={sample_xywhr[0,2]:.3f}, h={sample_xywhr[0,3]:.3f}, theta={sample_xywhr[0,4]:.3f}"
+                f"OBB sanity check (corners->xywhr): cx={sample_xywhr[0, 0]:.3f}, cy={sample_xywhr[0, 1]:.3f}, "
+                f"w={sample_xywhr[0, 2]:.3f}, h={sample_xywhr[0, 3]:.3f}, theta={sample_xywhr[0, 4]:.3f}"
             )
 
         with ThreadPool(NUM_THREADS) as pool:
@@ -355,12 +355,12 @@ class YOLODataset(BaseDataset):
                 path = Path(base).expanduser() / path
         return path.resolve()
 
-    def _load_prior_features(self, label: dict) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None, torch.Tensor | None]:
-        """Load (theta_prior, fd_norm, fd_raw, ar) tensors for the provided label dict."""
+    def _load_prior_features(self, label: dict) -> tuple[np.ndarray, np.ndarray, np.ndarray | None, np.ndarray | None]:
+        """Load (theta_prior, fd_norm, fd_raw, ar) numpy arrays for the provided label dict."""
         num_labels = int(label.get("cls", np.zeros((0, 1))).shape[0])
         if num_labels == 0:
-            zeros = torch.zeros((0, 1), dtype=torch.float32)
-            return zeros, zeros.clone(), None, None
+            zeros = np.zeros((0, 1), dtype=np.float32)
+            return zeros, zeros.copy(), None, None
         im_file = label.get("im_file")
         if not im_file:
             raise ValueError("Image file path is missing while loading prior fd features.")
@@ -380,10 +380,10 @@ class YOLODataset(BaseDataset):
                 f"Prior fd row mismatch for {prior_path if 'prior_path' in locals() else stem}: expected {num_labels}, "
                 f"got {prior_fd.shape[0]}"
             )
-        theta_prior = torch.from_numpy(prior_fd[:, 0:1].astype(np.float32))
-        fd_norm = torch.from_numpy(prior_fd[:, 1:2].astype(np.float32))
-        fd_raw = torch.from_numpy(prior_fd[:, 2:3].astype(np.float32)) if prior_fd.shape[1] >= 3 else None
-        ar = torch.from_numpy(prior_fd[:, 3:4].astype(np.float32)) if prior_fd.shape[1] >= 4 else None
+        theta_prior = prior_fd[:, 0:1].astype(np.float32)
+        fd_norm = prior_fd[:, 1:2].astype(np.float32)
+        fd_raw = prior_fd[:, 2:3].astype(np.float32) if prior_fd.shape[1] >= 3 else None
+        ar = prior_fd[:, 3:4].astype(np.float32) if prior_fd.shape[1] >= 4 else None
         return theta_prior, fd_norm, fd_raw, ar
 
     @staticmethod
