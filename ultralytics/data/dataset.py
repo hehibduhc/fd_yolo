@@ -121,8 +121,8 @@ class YOLODataset(BaseDataset):
             sample_corners = np.array([[0.2, 0.2, 0.4, 0.2, 0.4, 0.4, 0.2, 0.4]], dtype=np.float32).reshape(-1, 4, 2)
             sample_xywhr = xyxyxyxy2xywhr(sample_corners)
             LOGGER.debug(
-                f"OBB sanity check (corners->xywhr): cx={sample_xywhr[0, 0]:.3f}, cy={sample_xywhr[0, 1]:.3f}, "
-                f"w={sample_xywhr[0, 2]:.3f}, h={sample_xywhr[0, 3]:.3f}, theta={sample_xywhr[0, 4]:.3f}"
+                f"OBB sanity check (corners->xywhr): cx={sample_xywhr[0,0]:.3f}, cy={sample_xywhr[0,1]:.3f}, "
+                f"w={sample_xywhr[0,2]:.3f}, h={sample_xywhr[0,3]:.3f}, theta={sample_xywhr[0,4]:.3f}"
             )
 
         with ThreadPool(NUM_THREADS) as pool:
@@ -325,9 +325,13 @@ class YOLODataset(BaseDataset):
             segments = np.zeros((0, segment_resamples, 2), dtype=np.float32)
         label["instances"] = Instances(bboxes, segments, keypoints, bbox_format=bbox_format, normalized=normalized)
         if self.use_obb and self.prior_fd_dir:
-            theta_prior, fd_norm = self._load_prior_features(label)
+            theta_prior, fd_norm, fd_raw, ar = self._load_prior_features(label)
             label["theta_prior"] = theta_prior
             label["fd_norm"] = fd_norm
+            if fd_raw is not None:
+                label["fd"] = fd_raw
+            if ar is not None:
+                label["ar"] = ar
         return label
 
     def _resolve_prior_fd_dir(self, prior_fd_dir: str | Path | dict | None) -> Path | None:
@@ -351,12 +355,12 @@ class YOLODataset(BaseDataset):
                 path = Path(base).expanduser() / path
         return path.resolve()
 
-    def _load_prior_features(self, label: dict) -> tuple[torch.Tensor, torch.Tensor]:
-        """Load (theta_prior, fd_norm) tensors for the provided label dict."""
+    def _load_prior_features(self, label: dict) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None, torch.Tensor | None]:
+        """Load (theta_prior, fd_norm, fd_raw, ar) tensors for the provided label dict."""
         num_labels = int(label.get("cls", np.zeros((0, 1))).shape[0])
         if num_labels == 0:
             zeros = torch.zeros((0, 1), dtype=torch.float32)
-            return zeros, zeros.clone()
+            return zeros, zeros.clone(), None, None
         im_file = label.get("im_file")
         if not im_file:
             raise ValueError("Image file path is missing while loading prior fd features.")
@@ -373,11 +377,14 @@ class YOLODataset(BaseDataset):
             prior_fd = self._prior_fd_cache[stem]
         if prior_fd.shape[0] != num_labels:
             raise ValueError(
-                f"Mismatch between GT count ({num_labels}) and prior fd rows ({prior_fd.shape[0]}) for image {stem}"
+                f"Prior fd row mismatch for {prior_path if 'prior_path' in locals() else stem}: expected {num_labels}, "
+                f"got {prior_fd.shape[0]}"
             )
         theta_prior = torch.from_numpy(prior_fd[:, 0:1].astype(np.float32))
         fd_norm = torch.from_numpy(prior_fd[:, 1:2].astype(np.float32))
-        return theta_prior, fd_norm
+        fd_raw = torch.from_numpy(prior_fd[:, 2:3].astype(np.float32)) if prior_fd.shape[1] >= 3 else None
+        ar = torch.from_numpy(prior_fd[:, 3:4].astype(np.float32)) if prior_fd.shape[1] >= 4 else None
+        return theta_prior, fd_norm, fd_raw, ar
 
     @staticmethod
     def collate_fn(batch: list[dict]) -> dict:
