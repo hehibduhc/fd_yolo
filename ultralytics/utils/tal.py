@@ -412,7 +412,6 @@ class RotatedTaskAlignedAssigner(TaskAlignedAssigner):
 
     def _fd_composite_cost(self, gt_boxes: torch.Tensor, pd_boxes: torch.Tensor, gt_fd_vals: torch.Tensor):
         """Return AR and angle costs along with FD mismatch penalties for flattened candidate pairs."""
-
         eps = self.eps
         gt_wh = torch.clamp(gt_boxes[..., 2:4], min=eps)
         pd_wh = torch.clamp(pd_boxes[..., 2:4], min=eps)
@@ -447,7 +446,6 @@ class RotatedTaskAlignedAssigner(TaskAlignedAssigner):
 
     def _map_fd_to_group(self, fd_vals: torch.Tensor) -> torch.Tensor:
         """Map fractal dimension scalar to FD group index (0=L,1=M,2=H)."""
-
         th1, th2 = self.fd_thresholds
         group_idx = torch.zeros_like(fd_vals, dtype=torch.long)
         group_idx = torch.where(fd_vals >= th1, torch.ones_like(group_idx), group_idx)
@@ -456,22 +454,25 @@ class RotatedTaskAlignedAssigner(TaskAlignedAssigner):
 
     def _get_fd_bounds(self, device: torch.device, dtype: torch.dtype) -> torch.Tensor:
         """Return per-group AR bounds tensor ordered as L, M, H."""
-
         if (
             self._cached_fd_bounds is None
             or self._cached_fd_bounds.device != device
             or self._cached_fd_bounds.dtype != dtype
         ):
             bounds = [
-                (self.fd_group_rules.get(k, {}).get("ar_min", -torch.inf), self.fd_group_rules.get(k, {}).get("ar_max", torch.inf))
+                (
+                    self.fd_group_rules.get(k, {}).get("ar_min", -torch.inf),
+                    self.fd_group_rules.get(k, {}).get("ar_max", torch.inf),
+                )
                 for k in ("L", "M", "H")
             ]
             self._cached_fd_bounds = torch.tensor(bounds, device=device, dtype=dtype)
         return self._cached_fd_bounds
 
-    def _log_fd_debug(self, mask_gt: torch.Tensor, fd_filter_mask: torch.Tensor, composite_cost: dict[str, torch.Tensor]):
+    def _log_fd_debug(
+        self, mask_gt: torch.Tensor, fd_filter_mask: torch.Tensor, composite_cost: dict[str, torch.Tensor]
+    ):
         """Log FD filtering ratios and basic geometry cost stats for debugging."""
-
         total_candidates = int(mask_gt.sum().item())
         if total_candidates == 0:
             return
@@ -523,7 +524,6 @@ class RotatedTaskAlignedAssigner(TaskAlignedAssigner):
 
 def fd_cost_sanity_check() -> bool:
     """Lightweight check to ensure AR/theta proximity lowers the composite FD cost."""
-
     assigner = RotatedTaskAlignedAssigner(fd_use_hard_gating=False)
     gt_box = torch.tensor([[0.0, 0.0, 4.0, 1.0, 0.0]])
     fd_val = torch.tensor([[1.5]])
@@ -533,10 +533,7 @@ def fd_cost_sanity_check() -> bool:
     cost_good, _ = assigner._fd_composite_cost(gt_box, pred_good, fd_val)
     cost_bad, _ = assigner._fd_composite_cost(gt_box, pred_bad, fd_val)
 
-    return bool(
-        cost_good["ar"].mean() < cost_bad["ar"].mean()
-        and cost_good["theta"].mean() < cost_bad["theta"].mean()
-    )
+    return bool(cost_good["ar"].mean() < cost_bad["ar"].mean() and cost_good["theta"].mean() < cost_bad["theta"].mean())
 
 
 def make_anchors(feats, strides, grid_cell_offset=0.5):
