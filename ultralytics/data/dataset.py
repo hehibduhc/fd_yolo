@@ -121,8 +121,8 @@ class YOLODataset(BaseDataset):
             sample_corners = np.array([[0.2, 0.2, 0.4, 0.2, 0.4, 0.4, 0.2, 0.4]], dtype=np.float32).reshape(-1, 4, 2)
             sample_xywhr = xyxyxyxy2xywhr(sample_corners)
             LOGGER.debug(
-                f"OBB sanity check (corners->xywhr): cx={sample_xywhr[0,0]:.3f}, cy={sample_xywhr[0,1]:.3f}, "
-                f"w={sample_xywhr[0,2]:.3f}, h={sample_xywhr[0,3]:.3f}, theta={sample_xywhr[0,4]:.3f}"
+                f"OBB sanity check (corners->xywhr): cx={sample_xywhr[0, 0]:.3f}, cy={sample_xywhr[0, 1]:.3f}, "
+                f"w={sample_xywhr[0, 2]:.3f}, h={sample_xywhr[0, 3]:.3f}, theta={sample_xywhr[0, 4]:.3f}"
             )
 
         with ThreadPool(NUM_THREADS) as pool:
