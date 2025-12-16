@@ -709,6 +709,9 @@ class v8OBBLoss(v8DetectionLoss):
         self._log_angle_prior_hyp()
         loss = torch.zeros(4, device=self.device)  # box, cls, dfl, fd
         if isinstance(preds, (list, tuple)):
+            # Unwrap inference tuple (preds, train_out)
+            preds = preds[1] if len(preds) == 2 and isinstance(preds[1], (list, tuple)) else preds
+
             if len(preds) == 3:
                 feats, pred_angle, fd_pred = preds
             elif len(preds) == 2:

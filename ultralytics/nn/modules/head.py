@@ -382,10 +382,12 @@ class OBB(Detect):
 
         if self.fd_expert_head:
             y = self._inference(head_outputs)
-            return torch.cat([y, angle], 1) if self.export else (torch.cat([y, angle], 1), (head_outputs, angle))
+            train_out = (head_outputs, angle, fd_pred) if self.fd_branch else (head_outputs, angle)
+            return torch.cat([y, angle], 1) if self.export else (torch.cat([y, angle], 1), train_out)
 
         x_out = head_outputs
-        return torch.cat([x_out, angle], 1) if self.export else (torch.cat([x_out[0], angle], 1), (x_out[1], angle))
+        train_out = (x_out, angle, fd_pred) if self.fd_branch else (x_out, angle)
+        return torch.cat([x_out, angle], 1) if self.export else (torch.cat([x_out[0], angle], 1), train_out)
 
     def decode_bboxes(self, bboxes: torch.Tensor, anchors: torch.Tensor) -> torch.Tensor:
         """Decode rotated bounding boxes."""
