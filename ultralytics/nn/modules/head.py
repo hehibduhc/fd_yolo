@@ -7,6 +7,7 @@ import copy
 import math
 
 import torch
+import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.init import constant_, xavier_uniform_
@@ -262,6 +263,23 @@ class Segment(Detect):
         return (torch.cat([x, mc], 1), p) if self.export else (torch.cat([x[0], mc], 1), (x[1], mc, p))
 
 
+def _gate_entropy_norm(gate: torch.Tensor, eps: float = 1e-9) -> torch.Tensor:
+    """Compute normalized entropy of gate weights shaped [N, E]."""
+    ent = -(gate * torch.log(gate + eps)).sum(dim=1).mean()
+    return ent / math.log(gate.shape[1])
+
+
+def _soft_usage(gate: torch.Tensor) -> torch.Tensor:
+    """Return mean soft usage per expert for gate shaped [N, E]."""
+    return gate.mean(dim=0)
+
+
+def _hard_usage(gate: torch.Tensor) -> torch.Tensor:
+    """Return hard routed usage per expert for gate shaped [N, E]."""
+    idx = gate.argmax(dim=1)
+    return torch.bincount(idx, minlength=gate.shape[1]).float() / idx.numel()
+
+
 class OBB(Detect):
     """YOLO OBB detection head for detection with rotation models.
 
@@ -309,6 +327,10 @@ class OBB(Detect):
         self.fd_gate_clamp_min = fd_gate_clamp_min
         self.fd_gate_clamp_max = fd_gate_clamp_max
         self.ne = ne  # number of extra parameters
+        self.register_buffer("_gate_stat_sum_usage", torch.zeros(self.num_experts), persistent=False)
+        self.register_buffer("_gate_stat_sum_entropy", torch.zeros(1), persistent=False)
+        self.register_buffer("_gate_stat_sum_hard", torch.zeros(self.num_experts), persistent=False)
+        self.register_buffer("_gate_stat_count", torch.zeros(1), persistent=False)
 
         c4 = max(ch[0] // 4, self.ne)
         self.cv4 = nn.ModuleList(nn.Sequential(Conv(x, c4, 3), Conv(c4, c4, 3), nn.Conv2d(c4, self.ne, 1)) for x in ch)
@@ -363,6 +385,16 @@ class OBB(Detect):
                         gate_src = gate_src.clamp(max=self.fd_gate_clamp_max)
                     gate_logits = self.gate_convs[i](gate_src)
                 gate = F.softmax(gate_logits, dim=1)
+                if self.training:
+                    with torch.no_grad():
+                        g_flat = gate.permute(0, 2, 3, 1).reshape(-1, self.num_experts)
+                        if g_flat.numel():
+                            self._gate_stat_sum_usage += g_flat.sum(dim=0)
+                            self._gate_stat_sum_entropy += (-(g_flat * torch.log(g_flat + 1e-9)).sum(dim=1)).sum()
+                            self._gate_stat_count += g_flat.shape[0]
+                            self._gate_stat_sum_hard += torch.bincount(
+                                g_flat.argmax(dim=1), minlength=self.num_experts
+                            ).to(self._gate_stat_sum_hard)
 
                 cls_out.append((gate.unsqueeze(2) * cls_stack).sum(dim=1))
                 reg_out.append((gate.unsqueeze(2) * reg_stack).sum(dim=1))
@@ -409,6 +441,34 @@ class OBB(Detect):
             nn.Sequential(DWConv(c3, c3, 3), Conv(c3, c3, 1)),
             nn.Conv2d(c3, self.nc, 1),
         )
+
+    def pop_gate_stats(self):
+        """Aggregate and reset gate statistics, applying DDP all-reduce when available."""
+        if self._gate_stat_count.item() == 0:
+            return None
+
+        if dist.is_available() and dist.is_initialized():
+            dist.all_reduce(self._gate_stat_sum_usage, op=dist.ReduceOp.SUM)
+            dist.all_reduce(self._gate_stat_sum_entropy, op=dist.ReduceOp.SUM)
+            dist.all_reduce(self._gate_stat_sum_hard, op=dist.ReduceOp.SUM)
+            dist.all_reduce(self._gate_stat_count, op=dist.ReduceOp.SUM)
+
+        usage = (self._gate_stat_sum_usage / self._gate_stat_count).clone()
+        ent = (self._gate_stat_sum_entropy / self._gate_stat_count).clone()
+        ent_norm = ent / math.log(len(usage))
+        hard = (self._gate_stat_sum_hard / self._gate_stat_count).clone()
+
+        self._gate_stat_sum_usage.zero_()
+        self._gate_stat_sum_entropy.zero_()
+        self._gate_stat_sum_hard.zero_()
+        self._gate_stat_count.zero_()
+
+        return {
+            "gate_entropy": float(ent.item()),
+            "gate_entropy_norm": float(ent_norm.item()),
+            "expert_usage": usage.detach().cpu().tolist(),
+            "expert_usage_hard": hard.detach().cpu().tolist(),
+        }
 
 
 class Pose(Detect):

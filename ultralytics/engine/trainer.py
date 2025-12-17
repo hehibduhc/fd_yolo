@@ -476,6 +476,7 @@ class BaseTrainer:
             if self.args.val or final_epoch or self.stopper.possible_stop or self.stop:
                 self._clear_memory(threshold=0.5)  # prevent VRAM spike
                 self.metrics, self.fitness = self.validate()
+            self._update_gate_metrics()
 
             # NaN recovery
             if self._handle_nan_recovery(epoch):
@@ -708,6 +709,39 @@ class BaseTrainer:
         if not self.best_fitness or self.best_fitness < fitness:
             self.best_fitness = fitness
         return metrics, fitness
+
+    def _update_gate_metrics(self):
+        """Pop expert gate statistics from model heads, log them, and append to metrics."""
+        model = unwrap_model(self.model)
+        stats_entries = []
+        for m in model.modules():
+            if hasattr(m, "pop_gate_stats"):
+                stats = m.pop_gate_stats()
+                if stats:
+                    stats_entries.append(stats)
+        if not stats_entries:
+            return
+
+        if self.metrics is None:
+            self.metrics = {}
+
+        for idx, stats in enumerate(stats_entries):
+            suffix = "" if len(stats_entries) == 1 else f"/m{idx}"
+            self.metrics[f"gate_entropy{suffix}"] = stats["gate_entropy"]
+            self.metrics[f"gate_entropy_norm{suffix}"] = stats["gate_entropy_norm"]
+            for i, usage in enumerate(stats.get("expert_usage", [])):
+                self.metrics[f"expert_usage{suffix}/e{i}"] = usage
+            for i, usage in enumerate(stats.get("expert_usage_hard", [])):
+                self.metrics[f"expert_usage_hard{suffix}/e{i}"] = usage
+
+            if RANK in {-1, 0}:
+                usage_soft = stats.get("expert_usage", [])
+                usage_soft_str = ", ".join(f"{u:.3f}" for u in usage_soft)
+                usage_hard = stats.get("expert_usage_hard", [])
+                usage_hard_str = "" if not usage_hard else f", hard=[{', '.join(f'{u:.3f}' for u in usage_hard)}]"
+                LOGGER.info(
+                    f"Gate H_norm{suffix}={stats['gate_entropy_norm']:.4f}{usage_hard_str} usage=[{usage_soft_str}]"
+                )
 
     def get_model(self, cfg=None, weights=None, verbose=True):
         """Get model and raise NotImplementedError for loading cfg files."""

@@ -72,6 +72,13 @@ DEFAULT_FD_GROUP_RULES = {
 }
 
 
+DEFAULT_FD_GROUP_RULES = {
+    "L": {"ar_min": 3.0, "ar_max": 10.0},
+    "M": {"ar_min": 2.0, "ar_max": 10.0},
+    "H": {"ar_min": 1.0, "ar_max": 4.0},
+}
+
+
 class TaskAlignedAssigner(nn.Module):
     """A task-aligned assigner for object detection.
 
