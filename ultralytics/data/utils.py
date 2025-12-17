@@ -212,10 +212,20 @@ def verify_image_label(args: tuple) -> list:
                     assert lb.shape[1] == (5 + nkpt * ndim), f"labels require {(5 + nkpt * ndim)} columns each"
                     points = lb[:, 5:].reshape(-1, ndim)[:, :2]
                 else:
-                    assert lb.shape[1] == 5, f"labels require 5 columns, {lb.shape[1]} columns detected"
-                    points = lb[:, 1:]
+                    assert lb.shape[1] >= 5, f"labels require at least 5 columns, {lb.shape[1]} columns detected"
+                    if lb.shape[1] >= 9:
+                        points = lb[:, 1:9].reshape(-1, 4, 2)
+                        segments = [p for p in points]
+                        coords = points.reshape(-1, 2)
+                    elif lb.shape[1] >= 6:
+                        points = lb[:, 1:5]
+                        coords = points
+                    else:
+                        points = lb[:, 1:5]
+                        coords = points
                 # Coordinate points check with 1% tolerance
-                assert points.max() <= 1.01, f"non-normalized or out of bounds coordinates {points[points > 1.01]}"
+                if not keypoint:
+                    assert coords.max() <= 1.01, f"non-normalized or out of bounds coordinates {coords[coords > 1.01]}"
                 assert lb.min() >= -0.01, f"negative class labels or coordinate {lb[lb < -0.01]}"
 
                 # All labels
@@ -241,7 +251,6 @@ def verify_image_label(args: tuple) -> list:
             if ndim == 2:
                 kpt_mask = np.where((keypoints[..., 0] < 0) | (keypoints[..., 1] < 0), 0.0, 1.0).astype(np.float32)
                 keypoints = np.concatenate([keypoints, kpt_mask[..., None]], axis=-1)  # (nl, nkpt, 3)
-        lb = lb[:, :5]
         return im_file, lb, shape, segments, keypoints, nm, nf, ne, nc, msg
     except Exception as e:
         nc = 1
