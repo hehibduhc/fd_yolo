@@ -7,9 +7,9 @@ import copy
 import math
 
 import torch
+import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.distributed as dist
 from torch.nn.init import constant_, xavier_uniform_
 
 from ultralytics.utils import NOT_MACOS14
@@ -337,9 +337,7 @@ class OBB(Detect):
 
         if self.fd_branch:
             c_fd = max(ch[0] // 4, 16)
-            self.fd_heads = nn.ModuleList(
-                nn.Sequential(Conv(x, c_fd, 3), nn.SiLU(), nn.Conv2d(c_fd, 1, 1)) for x in ch
-            )
+            self.fd_heads = nn.ModuleList(nn.Sequential(Conv(x, c_fd, 3), nn.SiLU(), nn.Conv2d(c_fd, 1, 1)) for x in ch)
             self.gate_convs = nn.ModuleList(nn.Conv2d(1, self.num_experts, 1) for _ in ch)
 
         if self.fd_expert_head:
@@ -392,9 +390,7 @@ class OBB(Detect):
                         g_flat = gate.permute(0, 2, 3, 1).reshape(-1, self.num_experts)
                         if g_flat.numel():
                             self._gate_stat_sum_usage += g_flat.sum(dim=0)
-                            self._gate_stat_sum_entropy += (
-                                -(g_flat * torch.log(g_flat + 1e-9)).sum(dim=1)
-                            ).sum()
+                            self._gate_stat_sum_entropy += (-(g_flat * torch.log(g_flat + 1e-9)).sum(dim=1)).sum()
                             self._gate_stat_count += g_flat.shape[0]
                             self._gate_stat_sum_hard += torch.bincount(
                                 g_flat.argmax(dim=1), minlength=self.num_experts

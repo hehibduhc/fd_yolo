@@ -738,9 +738,7 @@ class BaseTrainer:
                 usage_soft = stats.get("expert_usage", [])
                 usage_soft_str = ", ".join(f"{u:.3f}" for u in usage_soft)
                 usage_hard = stats.get("expert_usage_hard", [])
-                usage_hard_str = (
-                    "" if not usage_hard else f", hard=[{', '.join(f'{u:.3f}' for u in usage_hard)}]"
-                )
+                usage_hard_str = "" if not usage_hard else f", hard=[{', '.join(f'{u:.3f}' for u in usage_hard)}]"
                 LOGGER.info(
                     f"Gate H_norm{suffix}={stats['gate_entropy_norm']:.4f}{usage_hard_str} usage=[{usage_soft_str}]"
                 )
