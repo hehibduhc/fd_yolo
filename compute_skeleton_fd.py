@@ -5,13 +5,14 @@ This script processes oriented bounding box (OBB) annotations and corresponding
 crack mask images to compute a skeleton-based fractal dimension (FD) for each
 GT instance. Results are written to a matching output text file.
 """
+
 from __future__ import annotations
 
 import argparse
 import logging
 import math
+from collections.abc import Sequence
 from pathlib import Path
-from typing import List, Sequence, Tuple
 
 import cv2
 import numpy as np
@@ -52,7 +53,7 @@ def obb_to_polygon(cx: float, cy: float, w: float, h: float, theta: float) -> np
 # ---------------------------- Mask utilities ------------------------------
 
 
-def rasterize_polygon(polygon: np.ndarray, shape: Tuple[int, int]) -> np.ndarray:
+def rasterize_polygon(polygon: np.ndarray, shape: tuple[int, int]) -> np.ndarray:
     """Rasterize polygon into a binary mask of given (H, W)."""
     h, w = shape
     poly_int = np.round(polygon).astype(np.int32)
@@ -102,7 +103,7 @@ def box_counting(skel: np.ndarray, size: int) -> int:
     return int(box_sum.sum())
 
 
-def compute_fd_from_skeleton(skel: np.ndarray, random_state: int = 42) -> Tuple[float, int, float]:
+def compute_fd_from_skeleton(skel: np.ndarray, random_state: int = 42) -> tuple[float, int, float]:
     """Compute fractal dimension from skeleton mask.
 
     Returns (fd, num_scales_used, r2).
@@ -116,8 +117,8 @@ def compute_fd_from_skeleton(skel: np.ndarray, random_state: int = 42) -> Tuple[
     if min_dim < 2:
         return -1.0, 0, 0.0
 
-    max_power = int(math.floor(math.log(min_dim, 2)))
-    sizes = [2 ** p for p in range(1, max_power + 1)]
+    max_power = math.floor(math.log(min_dim, 2))
+    sizes = [2**p for p in range(1, max_power + 1)]
     if not sizes:
         return -1.0, 0, 0.0
 
@@ -157,7 +158,7 @@ def compute_fd_from_skeleton(skel: np.ndarray, random_state: int = 42) -> Tuple[
         pred = model.predict(log_sizes)
         r2_val = r2_score(log_counts, pred)
         fd = -model.coef_[0]
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logging.warning("Theil-Sen regression failed: %s", exc)
         try:
             ransac = RANSACRegressor(random_state=random_state)
@@ -165,7 +166,7 @@ def compute_fd_from_skeleton(skel: np.ndarray, random_state: int = 42) -> Tuple[
             pred = ransac.predict(log_sizes)
             r2_val = r2_score(log_counts, pred)
             fd = -ransac.estimator_.coef_[0]
-        except Exception as exc2:  # noqa: BLE001
+        except Exception as exc2:
             logging.warning("RANSAC regression failed: %s", exc2)
             coeffs = np.polyfit(log_sizes.flatten(), log_counts, 1)
             fd = -coeffs[0]
@@ -178,7 +179,7 @@ def compute_fd_from_skeleton(skel: np.ndarray, random_state: int = 42) -> Tuple[
 # ------------------------------ Main logic --------------------------------
 
 
-def parse_label_file(label_path: Path) -> List[Tuple[str, float, float, float, float, float]]:
+def parse_label_file(label_path: Path) -> list[tuple[str, float, float, float, float, float]]:
     """Parse label file lines into tuples."""
     entries = []
     with label_path.open("r") as f:
@@ -210,7 +211,7 @@ def process_label_file(
     out_dir: Path,
     min_component: int,
     min_skeleton_points: int,
-) -> Tuple[int, int]:
+) -> tuple[int, int]:
     """Process a single label file. Returns (#instances, #neg1)."""
     base = label_path.stem
     mask_candidates = list(mask_dir.glob(base + ".*"))
@@ -219,7 +220,7 @@ def process_label_file(
     mask_path = sorted(mask_candidates)[0]
     mask = read_mask(mask_path)
     entries = parse_label_file(label_path)
-    out_lines: List[str] = []
+    out_lines: list[str] = []
     neg_count = 0
     for cls, cx, cy, w, h, theta in entries:
         polygon = obb_to_polygon(cx, cy, w, h, theta)
@@ -233,9 +234,7 @@ def process_label_file(
             if skel.sum() < min_skeleton_points:
                 fd, num_scales, r2_val = -1.0, 0, 0.0
                 neg_count += 1
-                logging.warning(
-                    "Insufficient skeleton pixels (%d) for %s", skel.sum(), base
-                )
+                logging.warning("Insufficient skeleton pixels (%d) for %s", skel.sum(), base)
             else:
                 fd, num_scales, r2_val = compute_fd_from_skeleton(skel)
                 if fd < 0:
@@ -255,8 +254,9 @@ def process_label_file(
     return len(entries), neg_count
 
 
-def process_all(labels_dir: Path, masks_dir: Path, out_dir: Path,
-                min_component: int = 20, min_skeleton_points: int = 30) -> None:
+def process_all(
+    labels_dir: Path, masks_dir: Path, out_dir: Path, min_component: int = 20, min_skeleton_points: int = 30
+) -> None:
     label_files = sorted(labels_dir.glob("*.txt"))
     total_files = 0
     total_instances = 0
